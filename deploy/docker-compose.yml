@@ -1,0 +1,137 @@
+# ============================================================================
+# 社区养老服务平台 · 服务器部署编排（唯一入口，在 deploy/ 目录内执行）
+#
+# 前置设施（服务器上已存在，compose 不创建、不管理）：
+#   PostgreSQL : pgvector/pgvector:pg16，容器名 pg，宿主仅 127.0.0.1:5432
+#   MinIO      : 已监听 9000（容器或宿主二进制均可）
+#   MongoDB    : 与本项目无关，不要改动
+#
+# 网络：本项目容器 + 已有的 PG/MinIO 都挂在 external 网络 socialoldcare-net 上，
+#       彼此用「服务名/别名」访问（api、admin、h5、postgres、minio）。
+#
+# 拓扑：
+#   nginx(80) ──┬─ /api/ ─→ api:8000
+#               ├─ /h5/  ─→ h5:80   （proxy_pass 末尾 / 削掉前缀）
+#               └─ /      ─→ admin:80
+#
+# 快捷步骤（详细见 deploy/README.md）：
+#   cp .env.example .env && vim .env
+#   docker network create socialoldcare-net
+#   docker network connect --alias postgres socialoldcare-net pg
+#   docker compose build && docker compose up -d
+# ============================================================================
+name: socialoldcare
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ---------------------------------------------------------------- 后端
+  api:
+    build:
+      # 构建上下文是仓库根目录：deploy/Dockerfile.api 需要读到 apps/api 源码
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    image: socialoldcare/api:0.2.0
+    container_name: socialoldcare-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # 连接串在这里拼，.env 里不重复写密码（密码必须是 URL 安全字符）
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-socialoldcare}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-socialoldcare}
+      APP_ENV: ${APP_ENV:-prod}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-1440}
+      ALLOW_DEMO_LOGIN: ${ALLOW_DEMO_LOGIN:-false}
+      AUTO_SEED: ${AUTO_SEED:-false}
+      AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://120.53.13.162}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?set MINIO_ACCESS_KEY in .env}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?set MINIO_SECRET_KEY in .env}
+      MINIO_BUCKET: ${MINIO_BUCKET:-socialoldcare-media}
+      MINIO_SECURE: ${MINIO_SECURE:-false}
+      MINIO_PUBLIC_BASE_URL: ${MINIO_PUBLIC_BASE_URL:-http://120.53.13.162:9000/socialoldcare-media}
+      FILE_DELIVERY: ${FILE_DELIVERY:-redirect}
+      REQUIRE_FILE_AUTH: ${REQUIRE_FILE_AUTH:-false}
+      UPLOAD_DIR: /app/uploads
+      BUSINESS_TIMEZONE: ${BUSINESS_TIMEZONE:-Asia/Shanghai}
+      TZ: Asia/Shanghai
+    extra_hosts:
+      # MinIO 是宿主机二进制（非容器）时，用 host.docker.internal:9000 访问它
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # 仅 STORAGE_PROVIDER=local 时用到；保留可避免以后切回本地存储丢历史图片
+      - api-uploads:/app/uploads
+    ports:
+      # 只绑回环，便于服务器上 curl 排查；公网流量一律走 nginx
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks: [backend]
+    logging: *default-logging
+
+  # ---------------------------------------------------------------- 前端静态站
+  admin:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.admin
+    image: socialoldcare/admin:0.2.0
+    container_name: socialoldcare-admin
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks: [backend]
+    logging: *default-logging
+
+  h5:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.h5
+    image: socialoldcare/h5:0.2.0
+    container_name: socialoldcare-h5
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks: [backend]
+    logging: *default-logging
+
+  # ---------------------------------------------------------------- 入口网关
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: socialoldcare-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # 配好证书后再打开 443
+      # - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+      - admin
+      - h5
+    networks: [backend]
+    logging: *default-logging
+
+networks:
+  backend:
+    # 必须由运维先创建，且已有 PG/MinIO 也接入同一网络：
+    #   docker network create socialoldcare-net
+    #   docker network connect --alias postgres socialoldcare-net pg
+    # 用 external 是为了避免 compose 校验 label 时报 network ... has incorrect label
+    external: true
+    name: socialoldcare-net
+
+volumes:
+  api-uploads:

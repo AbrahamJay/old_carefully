@@ -1,0 +1,22 @@
+# ============================================================================
+# H5 镜像（服务器部署用）
+# 构建上下文 = 仓库根目录（deploy/docker-compose.yml 里 context: ..）；
+# 产物 base=/h5/，由入口网关削掉 /h5 前缀后交给本容器托管。
+# ============================================================================
+FROM node:22-alpine AS build
+WORKDIR /app
+# 默认走 npmmirror；需要官方源时：
+#   docker compose build --build-arg NPM_REGISTRY=https://registry.npmjs.org h5
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+# 不用 corepack：它会去 registry.npmjs.org 拉 pnpm 并校验签名，配镜像源反而容易失败
+RUN npm config set registry "$NPM_REGISTRY" && npm i -g pnpm@10 --silent
+
+COPY apps/h5/package.json apps/h5/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY apps/h5/ ./
+RUN pnpm build
+
+FROM nginx:1.27-alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY deploy/nginx/h5.conf /etc/nginx/conf.d/default.conf

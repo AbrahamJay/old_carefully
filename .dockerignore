@@ -1,0 +1,30 @@
+# 构建上下文 = 仓库根目录（deploy/*.Dockerfile 需要读到 ../apps 源码）
+# 目的：把 node_modules/dist/.venv 等本地产物挡在镜像之外，减小上下文、避免架构不匹配
+.git/
+.gitignore
+.idea/
+*.iml
+.DS_Store
+
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/*.egg-info/
+
+**/.env
+**/.env.*
+!deploy/.env.example
+
+**/*.log
+apps/api/tests/
+apps/api/uploads/
+apps/miniapp/
+docs/

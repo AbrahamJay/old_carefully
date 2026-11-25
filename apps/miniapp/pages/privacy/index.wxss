@@ -1,0 +1,4 @@
+.page-head { margin-bottom: 22rpx; }
+.section-title { margin-top: 28rpx; }
+.section-title:first-child { margin-top: 0; }
+.p { font-size: 27rpx; color: #54615B; line-height: 1.9; margin-top: 10rpx; }

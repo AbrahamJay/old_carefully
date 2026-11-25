@@ -1,0 +1,173 @@
+<view class="page home-page">
+  <view class="hero-shell">
+    <view class="hero-aura aura-1"></view>
+    <view class="hero-aura aura-2"></view>
+
+    <view class="row between hero-head">
+      <view class="grow">
+        <view class="status-pill">
+          <view class="pulse-dot"></view>
+          <text>{{statusLine}}</text>
+        </view>
+        <view class="hero-greeting">{{greeting}}，{{user.name || '家人'}}</view>
+      </view>
+      <view class="hero-avatar" bindtap="goProfile">{{avatarText}}</view>
+    </view>
+
+    <view class="hero-dock" wx:if="{{!isStaff}}">
+      <view class="dock-btn main" bindtap="goCreate">
+        <view class="dock-icon">约</view>
+        <view>
+          <view class="dock-title">一键预约</view>
+          <view class="dock-sub">陪诊 · 保洁 · 代办</view>
+        </view>
+      </view>
+      <view class="dock-btn sub" bindtap="goElders">
+        <view class="dock-icon warm">家</view>
+        <view>
+          <view class="dock-title">长辈档案</view>
+          <view class="dock-sub">地址与健康备注</view>
+        </view>
+      </view>
+    </view>
+    <view class="hero-dock" wx:else>
+      <view class="dock-btn main" bindtap="goStaff">
+        <view class="dock-icon">工</view>
+        <view>
+          <view class="dock-title">员工接单</view>
+          <view class="dock-sub">接单上门 · 拍照留痕</view>
+        </view>
+      </view>
+      <view class="dock-btn sub" bindtap="goElders">
+        <view class="dock-icon warm">家</view>
+        <view>
+          <view class="dock-title">我的服务对象</view>
+          <view class="dock-sub">已派单的长辈</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <block wx:if="{{!isStaff}}">
+  <view class="section-head">
+    <view class="section-title">为您精选照护</view>
+    <view class="section-action" bindtap="goCreate">全部服务 ›</view>
+  </view>
+
+  <block wx:if="{{services.length}}">
+  <view
+    wx:if="{{featuredService}}"
+    class="bento-featured"
+    data-id="{{featuredService.id}}"
+    bindtap="goCreate"
+  >
+    <view class="featured-glow"></view>
+    <view class="row between">
+      <view class="featured-badge">口碑首选 · 专人全程陪同</view>
+      <view class="featured-price">¥{{featuredService.priceText}}<text class="unit">/{{featuredService.unit}}</text></view>
+    </view>
+    <view class="featured-main">
+      <view class="featured-seal">{{featuredService.iconText}}</view>
+      <view class="grow">
+        <view class="featured-title">{{featuredService.name}}</view>
+        <view class="featured-desc">{{featuredService.description}}</view>
+      </view>
+      <view class="featured-cta">去预约</view>
+    </view>
+  </view>
+
+  <view class="bento-duo" wx:if="{{secondaryServices.length}}">
+    <view
+      class="duo-card {{index === 1 ? 'warm-tint' : ''}}"
+      wx:for="{{secondaryServices}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goCreate"
+    >
+      <view class="row between">
+        <view class="duo-icon">{{item.iconText}}</view>
+        <view class="duo-price">¥{{item.priceText}}</view>
+      </view>
+      <view class="duo-title">{{item.name}}</view>
+      <view class="duo-sub">{{item.duration_minutes}}分钟 · 上门服务</view>
+    </view>
+  </view>
+
+  <scroll-view scroll-x class="capsule-strip" enhanced show-scrollbar="{{false}}">
+    <view
+      class="mini-capsule"
+      wx:for="{{capsuleServices}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goCreate"
+    >
+      <view class="cap-dot">{{item.iconText}}</view>
+      <text class="cap-name">{{item.name}}</text>
+      <text class="cap-price">¥{{item.priceText}}</text>
+    </view>
+    <view class="mini-capsule urgent" bindtap="goEmergency">
+      <view class="cap-dot urgent">急</view>
+      <text class="cap-name">紧急联系</text>
+      <text class="cap-price">120 / 社区</text>
+    </view>
+  </scroll-view>
+  </block>
+  <view wx:else class="card organic empty">
+    <view class="empty-mark">候</view>
+    <view class="empty-title">服务正在整理中</view>
+    <view class="empty-desc">暂时没有上架服务，直接联系管家帮您安排</view>
+    <button class="btn-primary empty-action" bindtap="callService">联系管家</button>
+  </view>
+
+  </block>
+
+  <view class="staff-banner" wx:if="{{isStaff}}" bindtap="goStaff">
+    <view class="staff-seal">工</view>
+    <view class="grow">
+      <view class="subtitle">进入员工接单工作台</view>
+      <view class="small muted mt8">接单上门 · 拍照留痕 · 服务完成</view>
+    </view>
+    <view class="staff-go">去处理</view>
+  </view>
+
+  <view class="section-head" wx:if="{{orders.length}}">
+    <view class="section-title">跟进中的服务</view>
+    <view class="section-action" bindtap="goOrders">全部 ›</view>
+  </view>
+
+  <view wx:if="{{orders.length}}">
+    <view class="order-bubble" wx:for="{{orders}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <view class="row between">
+        <view class="row">
+          <view class="order-dot"></view>
+          <view class="order-service">{{item.service_name}}</view>
+        </view>
+        <view class="tag {{item.statusCls}}">{{item.statusText}}</view>
+      </view>
+      <view class="order-meta">{{item.elder_name}} · 预约 {{item.timeText}}</view>
+      <view class="row between mt16">
+        <view class="order-no">{{item.order_no}}</view>
+        <view class="row">
+          <view class="amount">¥{{item.amountText}}</view>
+          <view class="chevron">›</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{services.length && !orders.length && !loading}}" class="card organic empty">
+    <view class="empty-mark">暖</view>
+    <view class="empty-title">还没有预约记录</view>
+    <view class="empty-desc">点选上方服务，管家会第一时间跟进安排</view>
+    <button class="btn-primary empty-action" bindtap="goCreate">预约第一次服务</button>
+  </view>
+
+  <view class="steward-island" bindtap="callService">
+    <view class="steward-avatar">管</view>
+    <view class="grow">
+      <view class="steward-title">社区专属养老管家</view>
+      <view class="steward-sub">不方便打字？点此直接电话帮您安排</view>
+    </view>
+    <view class="steward-call">呼叫</view>
+  </view>
+</view>

@@ -1,0 +1,102 @@
+.page-head { margin-bottom: 20rpx; }
+.chip-scroll { white-space: nowrap; margin-top: 22rpx; }
+.elder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 26rpx 16rpx 16rpx;
+  margin-right: 16rpx;
+  border-radius: 999rpx;
+  background: #F5F4F0;
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+}
+.elder-chip.active {
+  background: #EBF5F0;
+  border-color: #277A55;
+  box-shadow: 0 10rpx 24rpx -8rpx rgba(31, 99, 69, 0.18);
+}
+.elder-chip-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 50%;
+  background: #1F6345;
+  color: #FFFFFF;
+  text-align: center;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.elder-chip-name { font-size: 27rpx; font-weight: 600; color: #1A2420; }
+.elder-chip-addr { margin-top: 2rpx; font-size: 21rpx; color: #8C9690; max-width: 260rpx; overflow: hidden; text-overflow: ellipsis; }
+
+.service-chip {
+  display: inline-block;
+  width: 210rpx;
+  padding: 22rpx 20rpx;
+  margin-right: 16rpx;
+  border-radius: 32rpx 28rpx 36rpx 28rpx;
+  background: #F5F4F0;
+  border: 2rpx solid transparent;
+  vertical-align: top;
+  transition: all 0.2s ease;
+}
+.service-chip.active {
+  background: linear-gradient(145deg, #FFF8F1 0%, #FFFFFF 100%);
+  border-color: #E87A48;
+  box-shadow: 0 14rpx 30rpx -10rpx rgba(232, 122, 72, 0.2);
+}
+.service-chip-top { display: flex; align-items: center; justify-content: space-between; }
+.service-chip-icon {
+  width: 52rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  border-radius: 18rpx;
+  background: #E6F3EC;
+  color: #1F6345;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+.service-chip-price { font-size: 26rpx; font-weight: 700; color: #E87A48; }
+.service-chip-name { margin-top: 16rpx; font-size: 28rpx; font-weight: 700; color: #1A2420; }
+.service-chip-sub { margin-top: 4rpx; font-size: 21rpx; color: #8C9690; }
+
+.quick-block { margin-top: 26rpx; }
+.quick-label { font-size: 24rpx; color: #8C9690; margin-bottom: 12rpx; padding-left: 6rpx; }
+.time-summary {
+  margin-top: 24rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 22rpx;
+  background: #EBF5F0;
+  color: #1F6345;
+  font-size: 25rpx;
+  font-weight: 500;
+}
+
+.form-row { display: flex; gap: 18rpx; }
+.form-col { flex: 1; min-width: 0; }
+.empty-inline {
+  margin-top: 20rpx;
+  padding: 26rpx;
+  border-radius: 26rpx;
+  background: #FFF0E6;
+  color: #D96B38;
+  text-align: center;
+  font-size: 26rpx;
+}
+
+.pay-note {
+  margin: 6rpx 4rpx 0;
+  padding: 24rpx 28rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #FFF6EE 0%, #FDEEE2 100%);
+}
+.action-price {
+  flex: 0 0 176rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 10rpx;
+}
+.action-bar .btn-primary { flex: 1; }

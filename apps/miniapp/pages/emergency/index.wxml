@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="page-head">
+    <view class="eyebrow">EMERGENCY</view>
+    <view class="title mt8">紧急联系</view>
+    <view class="small muted mt8">如遇摔倒、胸痛、呼吸困难等紧急情况，请先拨打 120。</view>
+  </view>
+
+  <view class="emergency-hero">
+    <view class="emergency-label">急救电话</view>
+    <view class="emergency-number">120</view>
+    <button class="btn-warn" data-phone="{{emergencyPhone}}" bindtap="call">拨打 120</button>
+  </view>
+
+  <view class="card organic">
+    <view class="call-item" data-phone="{{servicePhone}}" bindtap="call">
+      <view>
+        <view class="subtitle">社区养老管家</view>
+        <view class="small muted mt8">{{servicePhone}}</view>
+      </view>
+      <view class="call-btn">拨打</view>
+    </view>
+    <view class="call-item" data-phone="{{communityPhone}}" bindtap="call">
+      <view>
+        <view class="subtitle">社区服务中心</view>
+        <view class="small muted mt8">{{communityPhone}}</view>
+      </view>
+      <view class="call-btn">拨打</view>
+    </view>
+  </view>
+
+  <view class="card organic warm">
+    <view class="small">重要说明</view>
+    <view class="micro mt8">本演示版不提供急救承诺，不替代 120、社区和家属的应急处理。</view>
+  </view>
+</view>

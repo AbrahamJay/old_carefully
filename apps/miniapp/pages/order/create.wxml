@@ -1,0 +1,127 @@
+<view class="page with-action">
+  <view class="page-head">
+    <view class="eyebrow">BOOK A SERVICE</view>
+    <view class="title mt8">预约服务</view>
+    <view class="small muted mt8">点选即可，管家会尽快确认安排。</view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">1 · 选择长辈</view>
+    <scroll-view wx:if="{{elders.length}}" scroll-x class="chip-scroll" enhanced show-scrollbar="{{false}}">
+      <view
+        class="elder-chip {{elderIndex === index ? 'active' : ''}}"
+        wx:for="{{elders}}"
+        wx:key="id"
+        data-index="{{index}}"
+        bindtap="onQuickElder"
+      >
+        <view class="elder-chip-avatar">{{item.name[0]}}</view>
+        <view>
+          <view class="elder-chip-name">{{item.name}}</view>
+          <view class="elder-chip-addr">{{item.community || item.address}}</view>
+        </view>
+      </view>
+    </scroll-view>
+    <view wx:else class="empty-inline" bindtap="goAddElder">
+      <text>还没有长辈档案，点此添加 +</text>
+    </view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">2 · 选择服务</view>
+    <scroll-view wx:if="{{services.length}}" scroll-x class="chip-scroll" enhanced show-scrollbar="{{false}}">
+      <view
+        class="service-chip {{serviceIndex === index ? 'active' : ''}}"
+        wx:for="{{services}}"
+        wx:key="id"
+        data-index="{{index}}"
+        bindtap="onQuickService"
+      >
+        <view class="service-chip-top">
+          <view class="service-chip-icon">{{item.name[0]}}</view>
+          <view class="service-chip-price">¥{{item.price_cents / 100}}</view>
+        </view>
+        <view class="service-chip-name">{{item.name}}</view>
+        <view class="service-chip-sub">{{item.duration_minutes}} 分钟</view>
+      </view>
+    </scroll-view>
+    <view wx:else class="empty-inline" bindtap="callService">暂无可预约服务，点此联系管家</view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">3 · 选择时间</view>
+    <view class="quick-block">
+      <view class="quick-label">日期</view>
+      <view class="chip-row">
+        <view
+          class="chip {{date === item.value ? 'active' : ''}}"
+          wx:for="{{quickDates}}"
+          wx:key="label"
+          data-value="{{item.value}}"
+          bindtap="onQuickDate"
+        >{{item.label}}</view>
+        <picker mode="date" value="{{date}}" bindchange="onDateChange">
+          <view class="chip">自定义 ›</view>
+        </picker>
+      </view>
+    </view>
+    <view class="quick-block">
+      <view class="quick-label">时间段</view>
+      <view class="chip-row">
+        <view
+          class="chip {{time === item ? 'active' : ''}}"
+          wx:for="{{quickTimes}}"
+          wx:key="*this"
+          data-value="{{item}}"
+          bindtap="onQuickTime"
+        >{{item}}</view>
+        <picker mode="time" value="{{time}}" bindchange="onTimeChange">
+          <view class="chip">自定义 ›</view>
+        </picker>
+      </view>
+    </view>
+    <view class="time-summary">已选：{{date}} {{time}}</view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">4 · 上门信息</view>
+    <view class="field">
+      <view class="label">服务地址</view>
+      <input class="input" value="{{address}}" data-field="address" bindinput="onInput" placeholder="楼栋 / 单元 / 门牌" />
+    </view>
+    <view class="form-row">
+      <view class="form-col">
+        <view class="label">联系人</view>
+        <input class="input" value="{{contactName}}" data-field="contactName" bindinput="onInput" placeholder="姓名" />
+      </view>
+      <view class="form-col">
+        <view class="label">电话</view>
+        <input class="input" type="number" value="{{contactPhone}}" data-field="contactPhone" bindinput="onInput" placeholder="联系电话" />
+      </view>
+    </view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">5 · 备注（可选）</view>
+    <textarea class="textarea" value="{{notes}}" data-field="notes" bindinput="onInput" placeholder="例如：周三上午复查，需要提前取号；家里有电梯。" />
+    <view class="helper">陪诊不提供诊疗、不代问诊；紧急情况请直接拨打 120。</view>
+  </view>
+
+  <view class="pay-note">
+    <view class="row between">
+      <view>
+        <view class="small">本次预估</view>
+        <view class="micro mt8">需付定金（30%）¥{{depositPrice || '—'}}，尾款服务完成后支付</view>
+      </view>
+      <view class="amount">¥{{servicePrice || '—'}}</view>
+    </view>
+  </view>
+
+  <view class="action-bar">
+    <view class="action-price">
+      <view class="micro muted">需付定金</view>
+      <view class="amount">¥{{depositPrice || '—'}}</view>
+    </view>
+    <button class="btn-primary" loading="{{loading}}" bindtap="submit">立即预约</button>
+  </view>
+</view>

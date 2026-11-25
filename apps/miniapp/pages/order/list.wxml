@@ -1,0 +1,63 @@
+<view class="page">
+  <view class="row between page-head">
+    <view>
+      <view class="eyebrow">MY SERVICES</view>
+      <view class="title mt8">我的订单</view>
+      <view class="small muted mt8">共 {{orders.length}} 条服务记录</view>
+    </view>
+    <button class="btn-primary small-btn" bindtap="goCreate">新预约</button>
+  </view>
+
+  <scroll-view scroll-x class="tabs" enhanced show-scrollbar="{{false}}">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tab {{current === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onTab"
+    >{{item.label}}</view>
+  </scroll-view>
+
+  <view wx:if="{{loading && !orders.length}}" class="skeleton-list">
+    <view class="order-bubble">
+      <view class="skeleton" style="width: 40%; height: 30rpx;"></view>
+      <view class="skeleton mt16" style="width: 70%; height: 24rpx;"></view>
+      <view class="skeleton mt16" style="width: 100%; height: 24rpx;"></view>
+    </view>
+    <view class="order-bubble">
+      <view class="skeleton" style="width: 40%; height: 30rpx;"></view>
+      <view class="skeleton mt16" style="width: 70%; height: 24rpx;"></view>
+    </view>
+  </view>
+
+  <view wx:if="{{!orders.length && !loading}}" class="card organic empty">
+    <view class="empty-mark">单</view>
+    <view class="empty-title">还没有订单</view>
+    <view class="empty-desc">预约一次陪诊或保洁，让服务先跑起来</view>
+    <button class="btn-primary empty-action" bindtap="goCreate">去预约</button>
+  </view>
+
+  <view class="order-bubble" wx:for="{{orders}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+    <view class="row between">
+      <view class="row">
+        <view class="order-dot"></view>
+        <view class="order-service">{{item.service_name}}</view>
+      </view>
+      <view class="row order-tags">
+        <view class="tag {{item.statusCls}}">{{item.statusText}}</view>
+      </view>
+    </view>
+    <view class="order-meta">{{item.elder_name}} · 预约 {{item.timeText}}</view>
+    <view class="row between mt16">
+      <view class="order-no">{{item.order_no}}</view>
+      <view class="row">
+        <view class="amount">¥{{item.amountText}}</view>
+        <view class="chevron">›</view>
+      </view>
+    </view>
+    <view class="pay-line" wx:if="{{item.payLabel}}">
+      <view class="pay-hint">{{item.payHint}}</view>
+      <view class="pay-action" data-id="{{item.id}}" catchtap="payOrder">{{item.payLabel}}</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,24 @@
+<view class="page">
+  <view class="page-head">
+    <view class="eyebrow">PRIVACY</view>
+    <view class="title mt8">隐私政策与授权</view>
+    <view class="small muted mt8">更新日期：2026-10-29 · 演示版</view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">我们收集什么</view>
+    <view class="p">为了提供上门服务，我们会收集长辈姓名、联系电话、地址、社区、紧急联系人，以及您主动填写的健康备注（如高血压、行动不便）。健康备注属于敏感个人信息，仅用于服务安排与安全提醒，不用于诊断或治疗。</view>
+
+    <view class="section-title">怎么使用</view>
+    <view class="p">用于下单、派单、服务记录、回访和家属查看；不会向无关第三方提供。服务记录中的照片/签字仅用于服务留痕和纠纷处理。</view>
+
+    <view class="section-title">授权与撤回</view>
+    <view class="p">首次建档时需勾选授权；您可以随时联系管家撤回授权、删除档案。撤回后我们将停止使用，但已发生的服务记录按法规保留。</view>
+
+    <view class="section-title">数据安全</view>
+    <view class="p">演示版数据存储在本地/测试数据库；正式上线将使用境内服务器、访问控制、加密传输与最小化收集。</view>
+
+    <view class="section-title">重要边界</view>
+    <view class="p">本服务不提供医疗诊断、治疗、代问诊；陪诊仅做流程协助与记录。紧急情况请直接拨打 120。</view>
+  </view>
+</view>

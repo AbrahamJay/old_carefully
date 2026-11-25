@@ -1,0 +1,85 @@
+<view class="page {{isAssigned || isInService ? 'with-action' : ''}}" wx:if="{{order}}">
+  <view class="card organic">
+    <view class="row between">
+      <view>
+        <view class="eyebrow">SERVICE ORDER</view>
+        <view class="order-no-line">
+          <text class="order-no">订单 {{order.order_no}}</text>
+          <text class="copy-link" bindtap="copyOrderNo">复制</text>
+        </view>
+        <view class="subtitle mt8">{{order.service.name}}</view>
+      </view>
+      <view class="tag {{statusCls}}">{{statusText}}</view>
+    </view>
+    <view class="divider"></view>
+    <view class="info-row"><view class="info-key">服务对象</view><view class="info-value">{{order.elder.name}}</view></view>
+    <view class="info-row"><view class="info-key">时间</view><view class="info-value">{{timeText}}</view></view>
+    <view class="info-row"><view class="info-key">地址</view><view class="info-value">{{order.address}}</view></view>
+    <view class="info-row"><view class="info-key">联系人</view><view class="info-value">{{order.contact_name}} {{order.contact_phone}}</view></view>
+    <view class="info-block" wx:if="{{order.notes}}">
+      <view class="info-key">备注</view>
+      <view class="info-text">{{order.notes}}</view>
+    </view>
+  </view>
+
+  <view class="card organic warm" wx:if="{{isAssigned}}">
+    <view class="section-title">下一步</view>
+    <view class="small muted mt8">接单并开始服务后，才能提交服务记录。</view>
+  </view>
+
+  <view class="card organic" wx:if="{{isInService}}">
+    <view class="section-title">服务记录</view>
+    <view class="small muted mt8">记录服务内容或上传 1–3 张照片（至少一项），提交后完成订单。</view>
+    <textarea class="textarea mt16" value="{{content}}" bindinput="onContent" placeholder="例如：陪同完成复查，医嘱已拍照发给家属；代取药 2 盒。" />
+    <view class="photo-grid mt16">
+      <view class="photo-item" wx:for="{{photos}}" wx:key="path">
+        <image class="photo" src="{{item.url}}" mode="aspectFill" data-url="{{item.url}}" bindtap="previewImage" />
+        <view class="remove" data-index="{{index}}" bindtap="removePhoto">×</view>
+      </view>
+      <view class="photo-add" wx:if="{{canAddPhoto}}" bindtap="chooseImage">+</view>
+    </view>
+    <view class="helper">照片仅用于服务留痕，不会对外公开。</view>
+  </view>
+
+  <view class="card organic" wx:if="{{isCompleted}}">
+    <view class="section-title">已完成</view>
+    <view class="small muted mt8">这单已经完成，以下是你提交的服务记录。</view>
+  </view>
+
+  <view class="card organic" wx:if="{{order.records.length}}">
+    <view class="section-title">已提交的服务记录（{{order.records.length}}）</view>
+    <view class="record" wx:for="{{order.records}}" wx:key="id">
+      <view class="row between">
+        <view class="record-time">{{item.timeText}}</view>
+        <view class="tag tag-green" wx:if="{{item.elder_confirmed}}">家属已确认</view>
+        <view class="tag tag-gray" wx:else>待家属确认</view>
+      </view>
+      <view class="record-content">{{item.content}}</view>
+      <view class="photo-grid mt16" wx:if="{{item.photos.length}}">
+        <image
+          class="photo"
+          wx:for="{{item.photos}}"
+          wx:for-item="photo"
+          wx:key="*this"
+          src="{{photo}}"
+          mode="aspectFill"
+          data-url="{{photo}}"
+          bindtap="previewImage"
+        />
+      </view>
+    </view>
+  </view>
+
+  <view class="card organic empty" wx:if="{{isCompleted && !order.records.length}}">
+    <view class="empty-mark">照</view>
+    <view class="empty-title">还没有读取到服务记录</view>
+    <view class="empty-desc">下拉刷新，或重新进入本单查看。</view>
+    <button class="btn-ghost empty-action" bindtap="load">刷新记录</button>
+  </view>
+
+  <view class="action-bar" wx:if="{{isAssigned || isInService}}">
+    <button class="btn-primary" wx:if="{{isAssigned}}" bindtap="acceptAndStart">接单并开始</button>
+    <button class="btn-primary" wx:if="{{isInService}}" loading="{{submitting}}" bindtap="submit">提交记录并完成</button>
+  </view>
+</view>
+<view wx:else class="page"><view class="card organic empty">加载中...</view></view>

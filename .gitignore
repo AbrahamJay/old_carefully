@@ -1,0 +1,59 @@
+# 仓库级红线：任何子项目都适用的忽略规则，兜底防止误提交。
+# 子项目内的 .gitignore 只处理该项目特有的产物，这里不做重复细化。
+
+# ---------------------------------------------------------------- 操作系统
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------- IDE
+# 统一不入库；团队共享的调试配置请写进 README 或 docs/，不要依赖 .idea 里的临时状态
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ---------------------------------------------------------------- 密钥与本地配置
+# 部署用 .env（根目录，docker compose 读取）
+.env
+.env.*
+!.env.example
+# 本地数据库文件与上传物
+*.db
+*.sqlite3
+uploads/
+tests/test-uploads/
+
+# ---------------------------------------------------------------- 依赖与构建产物
+node_modules/
+dist/
+build/
+.pnpm-store/
+*.tsbuildinfo
+
+# ---------------------------------------------------------------- Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Alembic 生成物里的缓存（迁移脚本本身必须入库，只排除临时文件）
+migrations/versions/__pycache__/
+migrations/versions/*.py.tmp
+
+# ---------------------------------------------------------------- 日志与临时文件
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+tmp/
+.tmp/

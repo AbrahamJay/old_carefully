@@ -1,0 +1,74 @@
+<view class="login-page">
+  <view class="login-canvas">
+    <view class="blob blob-1"></view>
+    <view class="blob blob-2"></view>
+    <view class="blob blob-3"></view>
+
+    <view class="brand-pill">
+      <view class="brand-dot">养</view>
+      <text class="brand-text-light">社区安心照护</text>
+    </view>
+
+    <view class="hero-copy">
+      <view class="hero-line">让家里的长辈，</view>
+      <view class="hero-line highlight">有人陪、有人管。</view>
+    </view>
+
+    <view class="hero-tags">
+      <view class="hero-tag">安心陪诊</view>
+      <view class="hero-tag">居家保洁</view>
+      <view class="hero-tag">适老改造</view>
+      <view class="hero-tag">日常代办</view>
+    </view>
+  </view>
+
+  <view class="login-sheet">
+    <view class="sheet-head">
+      <view>
+        <view class="sheet-title">账号登录</view>
+        <view class="sheet-sub">选择身份后，使用手机号和密码登录</view>
+      </view>
+    </view>
+
+    <view class="quick-roles">
+      <view
+        class="role-pill {{role === 'customer' ? 'active' : ''}}"
+        data-role="customer"
+        bindtap="selectRole"
+      >
+        <view class="role-icon">家</view>
+        <view class="grow">
+          <view class="role-name">我是家属</view>
+          <view class="role-desc">预约服务 · 查看陪诊记录</view>
+        </view>
+      </view>
+
+      <view
+        class="role-pill {{role === 'staff' ? 'active' : ''}}"
+        data-role="staff"
+        bindtap="selectRole"
+      >
+        <view class="role-icon staff">护</view>
+        <view class="grow">
+          <view class="role-name">我是服务人员</view>
+          <view class="role-desc">接单上门 · 拍照留痕</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="input-group">
+      <view class="input-pill">
+        <text class="input-prefix">手机号</text>
+        <input class="pill-field" type="number" maxlength="11" value="{{phone}}" bindinput="onPhone" placeholder="输入手机号" />
+      </view>
+      <view class="input-pill mt16">
+        <text class="input-prefix">密码</text>
+        <input class="pill-field" password="{{true}}" maxlength="32" value="{{password}}" bindinput="onPassword" placeholder="请输入密码" />
+      </view>
+    </view>
+
+    <button class="btn-primary login-submit" loading="{{loading}}" bindtap="submit">立即进入</button>
+
+    <view class="login-foot">登录即代表同意《隐私政策与长辈照护授权》</view>
+  </view>
+</view>

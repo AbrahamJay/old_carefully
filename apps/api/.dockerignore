@@ -1,0 +1,20 @@
+# 构建上下文过滤：把本地虚拟环境、缓存、测试产物排除掉，
+# 既缩短 docker build 的上传时间（.venv 就有 100MB+），也避免以后改成 COPY . . 时把 .env 打进镜像。
+
+.venv/
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.idea/
+
+# 本地配置与数据库文件：镜像里只认运行时环境变量
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite3
+
+# 测试与本地产物（镜像里不需要）
+tests/
+uploads/

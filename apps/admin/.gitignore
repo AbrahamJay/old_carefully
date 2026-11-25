@@ -1,0 +1,14 @@
+# 管理后台：Node/Vite 项目，只关心依赖、构建产物与本地环境文件。
+# 根目录 .gitignore 已覆盖 node_modules/dist/，这里显式声明是为了子目录单独建仓时依然生效。
+
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store

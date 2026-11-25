@@ -1,0 +1,80 @@
+<view class="page">
+  <view class="profile-shell">
+    <view class="profile-aura a"></view>
+    <view class="profile-aura b"></view>
+    <view class="row hero-top">
+      <view class="profile-avatar">{{avatarText}}</view>
+      <view class="grow">
+        <view class="profile-name">{{user.name || '未登录'}}</view>
+        <view class="profile-meta">{{user.phone || '微信用户'}} · {{user.role === 'staff' ? '服务人员' : '家属'}}<text wx:if="{{isStaff && user.station_name}}"> · {{user.station_name}}</text></view>
+      </view>
+      <view class="role-pill">{{user.role === 'staff' ? '员工' : '家属'}}</view>
+    </view>
+
+    <view class="profile-stats">
+      <view class="profile-stat" bindtap="goElders">
+        <view class="stat-num">{{elderCount}}</view>
+        <view class="stat-label">{{isStaff ? '服务对象' : '我的长辈'}}</view>
+      </view>
+      <view class="profile-stat" bindtap="callService">
+        <view class="stat-num">管家</view>
+        <view class="stat-label">一键联系</view>
+      </view>
+      <view class="profile-stat" bindtap="goEmergency">
+        <view class="stat-num">120</view>
+        <view class="stat-label">紧急联系</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card organic menu-card">
+    <view class="menu-item" bindtap="goElders">
+      <view class="row">
+        <view class="menu-icon">{{isStaff ? '务' : '家'}}</view>
+        <view>
+          <view class="menu-label">{{isStaff ? '我的服务对象' : '我的长辈'}}</view>
+          <view class="menu-desc">{{isStaff ? '已派单的服务地址与照护备注' : '档案、健康备注与授权'}}</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+    <view class="menu-item" bindtap="goEmergency">
+      <view class="row">
+        <view class="menu-icon red">急</view>
+        <view>
+          <view class="menu-label">紧急联系</view>
+          <view class="menu-desc">120 / 社区 / 管家</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+    <view class="menu-item" bindtap="goPrivacy">
+      <view class="row">
+        <view class="menu-icon">隐</view>
+        <view>
+          <view class="menu-label">隐私政策与授权</view>
+          <view class="menu-desc">数据如何被使用</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+    <view class="menu-item" bindtap="callService">
+      <view class="row">
+        <view class="menu-icon warm">电</view>
+        <view>
+          <view class="menu-label">联系社区管家</view>
+          <view class="menu-desc">{{servicePhone}}</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+  </view>
+
+  <view class="card organic warm">
+    <view class="small bold">演示环境说明</view>
+    <view class="micro mt8">个人小程序主体，不支持微信支付；订单收款由后台标记线下收款。</view>
+    <view class="micro mt8">客户 13800000001 / 123456；员工 13800000002 / 123456</view>
+  </view>
+
+  <button class="btn-ghost" bindtap="logout">退出登录</button>
+</view>

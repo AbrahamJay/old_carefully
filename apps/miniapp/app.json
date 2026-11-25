@@ -1,0 +1,53 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/home/index",
+    "pages/order/list",
+    "pages/profile/index",
+    "pages/elder/list",
+    "pages/elder/bind",
+    "pages/elder/edit",
+    "pages/order/create",
+    "pages/order/detail",
+    "pages/staff/orders",
+    "pages/staff/profile",
+    "pages/staff/record",
+    "pages/privacy/index",
+    "pages/emergency/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "社区养老管家",
+    "navigationBarBackgroundColor": "#F7F6F2",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7F6F2",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8C9690",
+    "selectedColor": "#1F6345",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/tabbar/home.png",
+        "selectedIconPath": "assets/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/order/list",
+        "text": "订单",
+        "iconPath": "assets/tabbar/orders.png",
+        "selectedIconPath": "assets/tabbar/orders-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "assets/tabbar/profile.png",
+        "selectedIconPath": "assets/tabbar/profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

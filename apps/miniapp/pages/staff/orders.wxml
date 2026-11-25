@@ -1,0 +1,74 @@
+<view class="page">
+  <view class="staff-shell">
+    <view class="staff-aura a"></view>
+    <view class="staff-aura b"></view>
+    <view class="row between shell-top">
+      <view class="grow">
+        <view class="eyebrow light">STAFF DESK</view>
+        <view class="staff-title">{{user.name}}，共 {{orders.length}} 单</view>
+        <view class="staff-sub">{{user.station_name ? user.station_name + ' · ' : ''}}今日 {{todayCount}} 单 · 待处理 {{pendingCount}} 单</view>
+      </view>
+      <view class="staff-avatar" bindtap="goProfile">{{avatarText}}</view>
+    </view>
+    <view class="shell-stats">
+      <view class="shell-stat">
+        <view class="stat-value">{{todayCount}}</view>
+        <view class="stat-label">今日预约</view>
+      </view>
+      <view class="shell-stat">
+        <view class="stat-value">{{pendingCount}}</view>
+        <view class="stat-label">待处理</view>
+      </view>
+      <view class="shell-stat">
+        <view class="stat-value">{{completedCount}}</view>
+        <view class="stat-label">累计完成</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="order-filter">
+    <view class="filter-chip {{filter === 'all' ? 'active' : ''}}" data-filter="all" bindtap="setFilter">全部 {{orders.length}}</view>
+    <view class="filter-chip {{filter === 'pending' ? 'active' : ''}}" data-filter="pending" bindtap="setFilter">待处理 {{pendingCount}}</view>
+    <view class="filter-chip {{filter === 'today' ? 'active' : ''}}" data-filter="today" bindtap="setFilter">今日 {{todayCount}}</view>
+  </view>
+
+  <view wx:if="{{!visibleOrders.length && !loading}}" class="card organic empty">
+    <view class="empty-mark">等</view>
+    <view class="empty-title">{{orders.length ? '当前筛选下没有订单' : '暂时没有派给你的单'}}</view>
+    <view class="empty-desc">{{orders.length ? '切到「全部」可以查看历史订单。' : '家属新提交的订单会先进入管家后台；管家确认并派单给你后，才会出现在这里。'}}</view>
+    <button class="btn-ghost empty-action" bindtap="load">刷新看看</button>
+  </view>
+
+  <view class="order-bubble" wx:for="{{visibleOrders}}" wx:key="id" data-id="{{item.id}}" bindtap="goRecord">
+    <view class="row between">
+      <view class="row">
+        <view class="order-dot"></view>
+        <view class="order-service">{{item.service_name}}</view>
+      </view>
+      <view class="row order-tags">
+        <view class="tag {{item.paymentCls}}" wx:if="{{item.paymentText}}">{{item.paymentText}}</view>
+        <view class="tag {{item.statusCls}}">{{item.statusText}}</view>
+      </view>
+    </view>
+    <view class="order-meta">{{item.elder_name}} · 预约 {{item.timeText}}</view>
+    <view class="row between mt16">
+      <view class="order-no">{{item.order_no}}</view>
+      <view class="row">
+        <view class="amount">¥{{item.amountText}}</view>
+        <view class="chevron">›</view>
+      </view>
+    </view>
+    <view class="order-hint">{{item.status === 'completed' ? '点开查看服务记录' : '点开处理：接单 / 开始 / 记录 / 完成'}}</view>
+  </view>
+
+  <view class="staff-bottom-nav">
+    <view class="staff-nav-item active">
+      <image class="staff-nav-icon" src="/assets/tabbar/home-active.png" mode="aspectFit" />
+      <text>工作台</text>
+    </view>
+    <view class="staff-nav-item" bindtap="goProfile">
+      <image class="staff-nav-icon" src="/assets/tabbar/profile.png" mode="aspectFit" />
+      <text>我的</text>
+    </view>
+  </view>
+</view>

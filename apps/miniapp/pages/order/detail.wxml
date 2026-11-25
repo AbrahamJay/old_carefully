@@ -1,0 +1,167 @@
+<view class="page with-action" wx:if="{{order}}">
+  <view class="status-hero">
+    <view class="status-aura a"></view>
+    <view class="status-aura b"></view>
+    <view class="row between hero-top">
+      <view class="hero-eyebrow" bindtap="copyOrderNo">订单 {{order.order_no}} · 复制</view>
+      <view class="tag {{statusCls}}">{{statusText}}</view>
+    </view>
+    <view class="status-headline">{{statusHeadline}}</view>
+    <view class="status-sub">{{statusSub}}</view>
+    <view class="row between status-bottom">
+      <view class="status-label">订单金额</view>
+      <view class="status-amount">¥{{amountText}}</view>
+    </view>
+  </view>
+
+  <view class="card organic timeline-card">
+    <view class="row between">
+      <view class="section-title">服务进度</view>
+      <view class="micro">{{statusText}}</view>
+    </view>
+    <view class="timeline">
+      <view class="step {{item.state}}" wx:for="{{steps}}" wx:key="label">
+        <view class="step-line"></view>
+        <view class="step-dot">{{item.state === 'done' ? '✓' : ''}}</view>
+        <view class="step-label">{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card organic">
+    <view class="section-title">服务详情</view>
+    <view class="info-row mt16">
+      <view class="info-key">服务项目</view>
+      <view class="info-value">{{order.service.name}}</view>
+    </view>
+    <view class="info-row">
+      <view class="info-key">服务时长</view>
+      <view class="info-value">{{order.service.duration_minutes}} 分钟</view>
+    </view>
+    <view class="info-row">
+      <view class="info-key">长辈</view>
+      <view class="info-value">{{order.elder.name}} {{order.elder.phone}}</view>
+    </view>
+    <view class="info-row">
+      <view class="info-key">服务人员</view>
+      <view class="info-value">{{order.staff ? order.staff.name : '等待管家安排'}}</view>
+    </view>
+    <view class="info-row">
+      <view class="info-key">收款状态</view>
+      <view class="info-value">{{payText}}</view>
+    </view>
+    <view class="divider"></view>
+    <view class="info-block">
+      <view class="info-key">上门地址</view>
+      <view class="info-text">{{order.address}}</view>
+    </view>
+    <view class="info-block" wx:if="{{order.contact_name}}">
+      <view class="info-key">联系人</view>
+      <view class="info-text">{{order.contact_name}} {{order.contact_phone}}</view>
+    </view>
+    <view class="info-block" wx:if="{{order.notes}}">
+      <view class="info-key">备注</view>
+      <view class="info-text">{{order.notes}}</view>
+    </view>
+    <view class="info-block" wx:if="{{order.cancel_reason}}">
+      <view class="info-key">取消原因</view>
+      <view class="info-text">{{order.cancel_reason}}</view>
+    </view>
+  </view>
+
+  <view class="card organic" wx:if="{{order.status !== 'cancelled' || order.payment_status === 'refunded'}}">
+    <view class="row between">
+      <view class="section-title">费用</view>
+      <view class="tag {{order.payment_status === 'refunded' ? 'tag-gray' : 'tag-green'}}">{{payText}}</view>
+    </view>
+    <view class="info-row mt16">
+      <view class="info-key">订单金额</view>
+      <view class="info-value">¥{{amountText}}</view>
+    </view>
+    <view class="info-row" wx:if="{{order.deposit_cents}}">
+      <view class="info-key">定金（30%）</view>
+      <view class="info-value">¥{{depositText}}</view>
+    </view>
+    <view class="info-row" wx:if="{{order.paid_cents}}">
+      <view class="info-key">已付</view>
+      <view class="info-value">¥{{paidText}}</view>
+    </view>
+    <view class="info-row" wx:if="{{order.refunded_cents}}">
+      <view class="info-key">已退款</view>
+      <view class="info-value">¥{{refundedText}}</view>
+    </view>
+    <view class="info-row" wx:if="{{order.remaining_cents && order.status !== 'cancelled' && order.payment_status !== 'refunded'}}">
+      <view class="info-key">待付</view>
+      <view class="info-value">¥{{remainingText}}</view>
+    </view>
+    <view class="helper" wx:if="{{canPay}}">请在底部操作栏完成支付。</view>
+    <view class="helper">演示环境：模拟支付，不产生真实扣款；取消订单会自动退已付款。</view>
+  </view>
+
+  <view class="card organic" wx:if="{{records.length}}">
+    <view class="section-title">服务记录</view>
+    <view class="record" wx:for="{{records}}" wx:key="id">
+      <view class="row between">
+        <view class="record-time">{{item.timeText}}</view>
+        <view class="tag tag-green" wx:if="{{item.elder_confirmed}}">家属已确认</view>
+        <view class="tag tag-gray" wx:else>待确认</view>
+      </view>
+      <view class="record-content">{{item.content}}</view>
+      <view class="photo-grid" wx:if="{{item.photos.length}}">
+        <image
+          class="photo"
+          wx:for="{{item.photos}}"
+          wx:for-item="photo"
+          wx:key="*this"
+          src="{{photo}}"
+          mode="aspectFill"
+          data-url="{{photo}}"
+          bindtap="previewImage"
+        />
+      </view>
+    </view>
+  </view>
+
+  <view class="card organic" wx:if="{{canConfirmService}}">
+    <view class="section-title">尾款已付，请确认服务完成</view>
+    <view class="small muted mt8">确认后本次服务记录生效，状态变为已完成。如有问题请先联系管家。</view>
+    <button class="btn-primary mt16" bindtap="confirmService">确认服务完成</button>
+  </view>
+
+  <view class="card organic" wx:if="{{order.review}}">
+    <view class="section-title">我的评价</view>
+    <view class="stars mt8">
+      <text wx:for="{{stars}}" wx:key="*this" class="{{order.review.rating >= item ? 'star on' : 'star'}}">★</text>
+    </view>
+    <view class="small muted mt8">{{order.review.content}}</view>
+  </view>
+
+  <view class="card organic" wx:if="{{canReview}}">
+    <view class="section-title">评价这次服务</view>
+    <view class="stars mt16">
+      <text
+        wx:for="{{stars}}"
+        wx:key="*this"
+        class="{{rating >= item ? 'star on' : 'star'}}"
+        data-rating="{{item}}"
+        bindtap="onRating"
+      >★</text>
+    </view>
+    <textarea class="textarea mt16" value="{{reviewContent}}" bindinput="onReviewInput" placeholder="服务怎么样？写两句吧" />
+    <button class="btn-primary mt20" bindtap="submitReview">提交评价</button>
+  </view>
+
+  <view class="action-bar">
+    <block wx:if="{{canPay}}">
+      <button class="btn-ghost" bindtap="callService">联系管家</button>
+      <button class="btn-primary" bindtap="payOrder">{{payButtonText}}</button>
+    </block>
+    <block wx:else>
+      <button class="btn-ghost" wx:if="{{canCancel || order.status === 'completed'}}" bindtap="callService">联系管家</button>
+      <button class="btn-primary" wx:if="{{canCancel}}" bindtap="onCancel">取消订单</button>
+      <button class="btn-primary" wx:elif="{{order.status === 'completed'}}" bindtap="goCreate">再来一单</button>
+      <button class="btn-primary" wx:else bindtap="callService">联系管家</button>
+    </block>
+  </view>
+</view>
+<view wx:else class="page"><view class="card organic empty">加载中...</view></view>

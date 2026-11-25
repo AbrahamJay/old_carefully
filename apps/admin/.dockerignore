@@ -1,0 +1,11 @@
+# 构建上下文过滤：本机 node_modules 里是 macOS 二进制，拷进 Linux 镜像会把 pnpm install 覆盖坏。
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/

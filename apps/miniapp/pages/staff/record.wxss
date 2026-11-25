@@ -1,0 +1,59 @@
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 9rpx 0;
+  font-size: 28rpx;
+}
+.info-key { color: #8C9690; flex-shrink: 0; }
+.info-value { color: #1A2420; text-align: right; }
+.info-block { margin-top: 18rpx; }
+.info-text { margin-top: 6rpx; font-size: 28rpx; line-height: 1.7; color: #1A2420; }
+.photo-grid { display: flex; gap: 14rpx; flex-wrap: wrap; }
+.photo-item { position: relative; }
+.photo { width: 154rpx; height: 154rpx; border-radius: 26rpx; background: #F3F2EE; }
+.remove {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 36rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: rgba(26, 36, 32, 0.72);
+  color: #FFFFFF;
+  font-size: 28rpx;
+}
+.photo-add {
+  width: 154rpx;
+  height: 154rpx;
+  line-height: 150rpx;
+  text-align: center;
+  border-radius: 26rpx;
+  background: #F5F4F0;
+  color: #8C9690;
+  font-size: 46rpx;
+}
+
+.record {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid rgba(22, 74, 51, 0.05);
+}
+.record:last-child { border-bottom: none; }
+.record-time { font-size: 24rpx; color: #8C9690; }
+.record-content { margin-top: 8rpx; font-size: 28rpx; line-height: 1.7; color: #1A2420; }
+
+.order-no-line {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 6rpx;
+}
+.copy-link {
+  font-size: 22rpx;
+  color: #1F6345;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  background: #E6F3EC;
+}

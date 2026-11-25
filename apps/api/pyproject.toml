@@ -1,0 +1,43 @@
+[project]
+name = "socialoldcare-api"
+version = "0.2.0"
+description = "社区养老服务管家 API（模块化单体）"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.30.0",
+  "sqlalchemy>=2.0.30",
+  "pydantic>=2.7.0",
+  "pydantic-settings>=2.3.0",
+  "python-multipart>=0.0.9",
+  "PyJWT>=2.8.0",
+  "argon2-cffi>=23.1.0",
+  "psycopg[binary]>=3.1.0",
+  "python-dotenv>=1.0.0",
+  "httpx>=0.27.0",
+  "minio>=7.2.20",
+  "alembic>=1.20.1",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.5.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# 迁移文件由 alembic 生成，不参与代码风格检查
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+ignore = ["B008", "E501", "UP017"]

@@ -1,0 +1,33 @@
+# 本地配置与密钥，绝不入库
+.env
+.env.local
+
+# 数据与上传物
+dev.db
+*.db
+*.sqlite3
+uploads/
+tests/test-uploads/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Alembic：迁移脚本必须入库，只排除生成的缓存/临时文件
+migrations/versions/__pycache__/
+migrations/versions/*.py.tmp
+
+# 日志
+*.log
+
+# IDE / OS
+.idea/
+.DS_Store

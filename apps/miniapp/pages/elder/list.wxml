@@ -1,0 +1,42 @@
+<view class="page">
+  <view class="page-head">
+    <view class="eyebrow">{{isStaff ? 'SERVICE OBJECTS' : 'FAMILY'}}</view>
+    <view class="row between head-title-row">
+      <view class="title">{{isStaff ? '服务对象' : '我的长辈'}}</view>
+      <view class="micro muted">共 {{elders.length}} 位</view>
+    </view>
+    <view class="head-actions" wx:if="{{!isStaff}}">
+      <button class="btn-ghost head-btn" bindtap="goBind">绑定已有长辈</button>
+      <button class="btn-primary head-btn" bindtap="goAdd">新增长辈</button>
+    </view>
+  </view>
+
+  <view wx:if="{{!elders.length && !loading}}" class="card organic empty">
+    <view class="empty-mark">{{isStaff ? '单' : '家'}}</view>
+    <view class="empty-title">{{isStaff ? '暂时没有服务对象' : '还没有长辈档案'}}</view>
+    <view class="empty-desc">{{isStaff ? '管家派单后，服务地址、联系人和照护备注会出现在这里' : '先建立一份档案，下单时就能直接选择'}}</view>
+    <button wx:if="{{!isStaff}}" class="btn-primary empty-action" bindtap="goAdd">新增长辈</button>
+  </view>
+
+  <view class="card organic elder-card" wx:for="{{elders}}" wx:key="id" data-index="{{index}}" bindtap="onElderTap">
+    <view class="row between">
+      <view class="row">
+        <view class="avatar">{{item.avatarText}}</view>
+        <view class="elder-info">
+          <view class="subtitle">{{item.name}}</view>
+          <view class="small muted mt8">{{item.community || '未填社区'}} · {{item.address || '未填地址'}}</view>
+        </view>
+      </view>
+      <view class="chevron">{{isStaff ? '查看' : '›'}}</view>
+    </view>
+    <view class="divider"></view>
+    <view class="small muted">{{isStaff ? '联系人' : '紧急联系人'}}：{{item.emergency_name || '未填'}} {{item.emergency_phone}}</view>
+    <view class="small muted mt8" wx:if="{{isStaff}}">长辈电话：{{item.phone || '未填'}}</view>
+    <view class="small muted mt8" wx:if="{{item.health_notes}}">备注：{{item.health_notes}}</view>
+    <view class="invite-line" wx:if="{{!isStaff && item.invite_code}}">
+      <text class="invite-label">邀请码</text>
+      <text class="invite-code">{{item.invite_code}}</text>
+      <text class="invite-copy" data-code="{{item.invite_code}}" catchtap="copyInvite">复制</text>
+    </view>
+  </view>
+</view>

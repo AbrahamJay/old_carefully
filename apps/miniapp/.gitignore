@@ -1,0 +1,6 @@
+# 微信小程序：源码即产物，没有构建目录；只需排除个人工具配置与可选的 npm 依赖。
+# project.private.config.json 是开发者工具按机器生成的（含本地编译开关），换人就会冲突。
+project.private.config.json
+node_modules/
+miniprogram_npm/
+.DS_Store

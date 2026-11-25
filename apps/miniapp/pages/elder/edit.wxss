@@ -1,0 +1,2 @@
+.page-head { margin-bottom: 24rpx; }
+.agree-text { margin-left: 12rpx; line-height: 1.7; flex: 1; }

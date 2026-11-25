@@ -1,0 +1,21 @@
+<view class="page">
+  <view class="page-head">
+    <view class="eyebrow">FAMILY</view>
+    <view class="title mt8">绑定已有长辈</view>
+    <view class="small muted mt8">如果长辈档案已经由其他家属创建，让对方在「我的长辈」里复制邀请码发给你。</view>
+  </view>
+
+  <view class="card organic">
+    <view class="field">
+      <view class="label">邀请码</view>
+      <input class="input" value="{{inviteCode}}" bindinput="onInput" placeholder="例如 DEMO01" maxlength="12" />
+    </view>
+    <button class="btn-primary btn-block mt24" loading="{{loading}}" bindtap="submit">确认绑定</button>
+  </view>
+
+  <view class="card organic warm">
+    <view class="small">演示邀请码</view>
+    <view class="micro mt8">演示码仅供体验：DEMO01 张爷爷 · DEMO02 李奶奶 · DEMO03 王爷爷。真实档案请用长辈卡片上的邀请码。</view>
+    <button class="btn-ghost btn-block mt16" bindtap="goAdd">没有码？先新增长辈</button>
+  </view>
+</view>

@@ -1,0 +1,4 @@
+{
+  "desc": "社区养老服务管家演示版",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

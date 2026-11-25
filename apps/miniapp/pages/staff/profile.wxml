@@ -1,0 +1,62 @@
+<view class="page staff-profile-page">
+  <view class="profile-shell">
+    <view class="profile-aura a"></view>
+    <view class="profile-aura b"></view>
+    <view class="row hero-top">
+      <view class="profile-avatar">{{avatarText}}</view>
+      <view class="grow">
+        <view class="profile-name">{{user.name || '服务人员'}}</view>
+        <view class="profile-meta">{{user.phone || '未绑定手机号'}} · 服务人员</view>
+        <view class="profile-station" wx:if="{{user.station_name}}">{{user.station_name}}</view>
+      </view>
+      <view class="role-pill">员工</view>
+    </view>
+  </view>
+
+  <view class="card organic menu-card">
+    <view class="menu-item" bindtap="goElders">
+      <view class="row">
+        <view class="menu-icon">务</view>
+        <view>
+          <view class="menu-label">我的服务对象</view>
+          <view class="menu-desc">已派单的服务地址与照护备注</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+    <view class="menu-item" bindtap="callService">
+      <view class="row">
+        <view class="menu-icon warm">电</view>
+        <view>
+          <view class="menu-label">联系社区管家</view>
+          <view class="menu-desc">{{servicePhone}}</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+    <view class="menu-item" bindtap="goPrivacy">
+      <view class="row">
+        <view class="menu-icon">隐</view>
+        <view>
+          <view class="menu-label">隐私政策与授权</view>
+          <view class="menu-desc">服务数据如何被使用</view>
+        </view>
+      </view>
+      <view class="chevron">›</view>
+    </view>
+  </view>
+
+  <view class="account-note">账号由社区管家统一开通；如需调整服务区域或停用账号，请联系管家。</view>
+  <button class="btn-ghost" bindtap="logout">退出登录</button>
+
+  <view class="staff-bottom-nav">
+    <view class="staff-nav-item" bindtap="goWorkbench">
+      <image class="staff-nav-icon" src="/assets/tabbar/home.png" mode="aspectFit" />
+      <text>工作台</text>
+    </view>
+    <view class="staff-nav-item active">
+      <image class="staff-nav-icon" src="/assets/tabbar/profile-active.png" mode="aspectFit" />
+      <text>我的</text>
+    </view>
+  </view>
+</view>

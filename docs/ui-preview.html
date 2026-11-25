@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>社区养老服务管家 · 视觉方向 v2</title>
+<style>
+  :root{
+    --deep:#164A33; --primary:#1F6345; --mint:#3A8E68; --soft:#E6F3EC;
+    --coral:#E87A48; --peach:#FFF0E6; --gold:#F6E3BA;
+    --bg:#F7F6F2; --surface:#FFFFFF; --cream:#F3F2EE;
+    --ink:#1A2420; --sub:#54615B; --muted:#8C9690; --line:#ECE8DF;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Source Han Sans SC","Noto Sans SC",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1760px;margin:0 auto;padding:34px 28px 44px}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px}
+  .kicker{font-size:11px;letter-spacing:3px;color:var(--muted);font-weight:600}
+  h1{margin:8px 0 0;font-size:32px;line-height:1.25;letter-spacing:.5px}
+  .head p{margin:8px 0 0;color:var(--sub);font-size:13px;line-height:1.7}
+  .swatches{display:flex;gap:8px;align-items:center}
+  .sw{width:38px;height:38px;border-radius:14px;border:1px solid rgba(0,0,0,.04)}
+  .frames{display:flex;gap:24px;align-items:flex-start}
+  .phone{
+    width:390px;height:844px;background:#F7F6F2;border-radius:44px;overflow:hidden;
+    box-shadow:0 34px 80px rgba(22,74,51,.16),0 0 0 1px rgba(22,74,51,.06);
+    position:relative;flex-shrink:0;
+  }
+  .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:112px;height:26px;background:#111;border-radius:999px;z-index:20}
+  .muted{color:var(--muted)} .small{font-size:12px;line-height:1.55} .tiny{font-size:10px;line-height:1.5}
+  .row{display:flex;align-items:center} .between{justify-content:space-between} .grow{flex:1;min-width:0}
+  .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}
+  .tag{font-size:9px;padding:5px 11px;border-radius:999px;background:var(--peach);color:#B65C1E;font-weight:600}
+  .tag.green{background:var(--soft);color:var(--primary)}
+  .amount{color:var(--coral);font-weight:700}
+
+  /* login */
+  .login{position:relative;min-height:100%;background:#F7F6F2}
+  .login-canvas{
+    position:relative;overflow:hidden;padding:70px 26px 96px;
+    background:radial-gradient(circle at 85% 18%,#358762 0%,#1D5E41 48%,#123E2A 100%);
+    color:#fff;border-radius:0 0 40px 40px;
+  }
+  .blob{position:absolute;border-radius:50%}
+  .blob.a{width:230px;height:230px;right:-70px;top:-60px;background:radial-gradient(circle,rgba(246,227,186,.24),rgba(246,227,186,0) 70%)}
+  .blob.b{width:180px;height:180px;left:-60px;bottom:-40px;background:radial-gradient(circle,rgba(104,204,156,.2),rgba(104,204,156,0) 70%)}
+  .brand-pill{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2)}
+  .brand-dot{width:26px;height:26px;line-height:26px;border-radius:50%;background:var(--gold);color:var(--deep);text-align:center;font-size:13px;font-weight:700}
+  .brand-pill span{font-size:11px;color:rgba(255,255,255,.9)}
+  .login-head{position:relative;z-index:1;margin-top:24px;font-size:30px;line-height:1.32;font-weight:700}
+  .login-head em{font-style:normal;color:var(--gold)}
+  .login-tags{position:relative;z-index:1;display:flex;gap:6px;margin-top:18px;flex-wrap:wrap}
+  .login-tags span{padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:10px}
+  .login-sheet{
+    position:relative;z-index:2;margin:-52px 16px 0;padding:24px 20px 26px;background:#fff;border-radius:30px;
+    box-shadow:0 28px 64px -16px rgba(22,74,51,.12);
+  }
+  .sheet-title{font-size:20px;font-weight:700}
+  .sheet-sub{margin-top:3px;font-size:11px;color:var(--muted)}
+  .role-pill{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;background:#F5F4F0;border:1.5px solid transparent;margin-top:8px}
+  .role-pill.active{background:#EBF5F0;border-color:#277A55}
+  .role-icon{width:38px;height:38px;line-height:38px;border-radius:13px;background:var(--primary);color:#fff;text-align:center;font-size:14px;font-weight:700}
+  .role-icon.staff{background:var(--coral)}
+  .role-name{font-size:12px;font-weight:600}
+  .role-desc{font-size:9px;color:#6E7872;margin-top:2px}
+  .input-pill{display:flex;align-items:center;height:44px;padding:0 14px;background:#F5F4F0;border-radius:999px;margin-top:9px}
+  .input-prefix{width:52px;font-size:11px;color:var(--sub)}
+  .input-pill span{font-size:12px;color:#A0A8A3}
+  .code-badge{margin-left:auto;padding:4px 9px;border-radius:999px;background:var(--soft);color:var(--primary);font-size:9px;font-weight:600}
+  .btn{height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+  .btn.primary{background:linear-gradient(135deg,#277A55,#164A33);color:#fff;box-shadow:0 14px 30px -8px rgba(22,74,51,.35)}
+  .login-btn{margin-top:18px}
+  .login-foot{text-align:center;font-size:9px;color:#A0A8A3;margin-top:14px}
+
+  /* home */
+  .home{padding:52px 18px 18px}
+  .hero{
+    position:relative;overflow:hidden;padding:20px 18px 18px;border-radius:28px;
+    background:radial-gradient(circle at 88% 14%,#388C65 0%,#1E6143 52%,#13402B 100%);
+    color:#fff;box-shadow:0 20px 44px -12px rgba(22,74,51,.3);
+  }
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.13);font-size:9px;color:rgba(255,255,255,.9)}
+  .pulse{width:6px;height:6px;border-radius:50%;background:#A9F5CE;box-shadow:0 0 0 3px rgba(169,245,206,.22)}
+  .hero-greet{margin-top:9px;font-size:22px;line-height:1.25;font-weight:700}
+  .hero-avatar{position:absolute;right:18px;top:20px;width:42px;height:42px;border-radius:16px;background:linear-gradient(135deg,#FFF7E8,#F6E3BA);color:var(--deep);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700}
+  .hero-dock{display:flex;gap:8px;margin-top:16px}
+  .dock{flex:1;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+  .dock.main{background:#fff;color:var(--ink)}
+  .dock-icon{width:30px;height:30px;line-height:30px;border-radius:10px;background:var(--soft);color:var(--primary);text-align:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .dock-title{font-size:11px;font-weight:700}
+  .dock-sub{font-size:8px;opacity:.68;margin-top:1px}
+  .section{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 9px}
+  .section-title{font-size:14px;font-weight:700}
+  .section-action{font-size:9px;color:var(--primary);background:var(--soft);padding:4px 10px;border-radius:999px}
+  .featured{position:relative;overflow:hidden;padding:16px;border-radius:24px 20px 26px 20px;background:linear-gradient(135deg,#fff 0%,#FFF7F0 100%);box-shadow:0 16px 38px -14px rgba(232,122,72,.16)}
+  .featured-badge{font-size:8px;padding:3px 9px;border-radius:999px;background:var(--peach);color:#D96B38;font-weight:600}
+  .featured-price{font-size:18px;font-weight:700;color:var(--coral)}
+  .featured-main{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .seal{width:44px;height:44px;line-height:44px;border-radius:15px;background:linear-gradient(135deg,#277A55,#164A33);color:#fff;text-align:center;font-size:17px;font-weight:700;flex-shrink:0}
+  .featured-title{font-size:15px;font-weight:700}
+  .featured-desc{font-size:9px;color:#6E7872;margin-top:3px;line-height:1.5}
+  .featured-cta{padding:7px 13px;border-radius:999px;background:var(--primary);color:#fff;font-size:9px;font-weight:600;flex-shrink:0}
+  .duo{display:flex;gap:9px;margin-top:10px}
+  .duo-card{flex:1;padding:14px 13px;border-radius:20px 16px 22px 16px;background:#fff;box-shadow:0 12px 30px -14px rgba(22,74,51,.12)}
+  .duo-card.warm{background:linear-gradient(145deg,#fff,#F4FAF6)}
+  .duo-icon{width:32px;height:32px;line-height:32px;border-radius:11px;background:var(--soft);color:var(--primary);text-align:center;font-size:12px;font-weight:700}
+  .duo-price{font-size:12px;font-weight:700;color:var(--coral)}
+  .duo-title{margin-top:8px;font-size:13px;font-weight:700}
+  .duo-sub{margin-top:2px;font-size:8px;color:var(--muted)}
+  .caps{display:flex;gap:7px;margin-top:10px;overflow:hidden}
+  .cap{display:flex;align-items:center;gap:5px;padding:6px 10px 6px 6px;border-radius:999px;background:#fff;box-shadow:0 8px 20px -12px rgba(22,74,51,.16);white-space:nowrap}
+  .cap-dot{width:22px;height:22px;line-height:22px;border-radius:50%;background:var(--soft);color:var(--primary);text-align:center;font-size:9px;font-weight:700}
+  .cap-name{font-size:9px;font-weight:600}
+  .cap-price{font-size:8px;color:var(--coral);font-weight:600}
+  .order{background:#fff;border-radius:20px 16px 22px 16px;padding:14px 15px;margin-top:10px;box-shadow:0 14px 34px -16px rgba(22,74,51,.12)}
+  .order-service{font-size:13px;font-weight:700}
+  .order-meta{font-size:9px;color:#6E7872;margin-top:4px}
+  .steward{display:flex;align-items:center;gap:9px;margin-top:14px;padding:11px 13px;border-radius:999px;background:linear-gradient(135deg,#1E6143,#143D2A);color:#fff;box-shadow:0 16px 34px -14px rgba(22,74,51,.35)}
+  .steward-avatar{width:30px;height:30px;line-height:30px;border-radius:50%;background:var(--gold);color:var(--deep);text-align:center;font-size:11px;font-weight:700}
+  .steward-title{font-size:11px;font-weight:700}
+  .steward-sub{font-size:8px;color:rgba(255,255,255,.7);margin-top:1px}
+  .steward-call{padding:6px 12px;border-radius:999px;background:var(--gold);color:var(--deep);font-size:9px;font-weight:700}
+
+  /* create */
+  .create{padding:52px 16px 16px}
+  .create-head{margin:0 4px 14px}
+  .create-title{font-size:24px;font-weight:700;margin-top:6px}
+  .create-sub{font-size:10px;color:var(--muted);margin-top:3px}
+  .card{background:#fff;border-radius:24px;padding:15px;margin-top:10px;box-shadow:0 14px 36px -18px rgba(22,74,51,.12)}
+  .card-title{font-size:12px;font-weight:700;margin-bottom:8px}
+  .chip-row{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:7px 13px;border-radius:999px;background:#F3F2EE;color:var(--sub);font-size:9px;font-weight:500}
+  .chip.active{background:linear-gradient(135deg,#277A55,#164A33);color:#fff;box-shadow:0 8px 18px -8px rgba(22,74,51,.3)}
+  .elder-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px 7px 7px;border-radius:999px;background:#F5F4F0;border:1.5px solid transparent;margin-right:7px}
+  .elder-chip.active{background:#EBF5F0;border-color:#277A55}
+  .elder-avatar{width:28px;height:28px;line-height:28px;border-radius:50%;background:var(--primary);color:#fff;text-align:center;font-size:10px;font-weight:700}
+  .elder-name{font-size:10px;font-weight:600}
+  .elder-addr{font-size:8px;color:var(--muted)}
+  .svc-chip{display:inline-block;width:100px;padding:10px;border-radius:16px;background:#F5F4F0;border:1.5px solid transparent;margin-right:7px;vertical-align:top}
+  .svc-chip.active{background:#FFF8F1;border-color:var(--coral)}
+  .svc-top{display:flex;align-items:center;justify-content:space-between}
+  .svc-icon{width:24px;height:24px;line-height:24px;border-radius:8px;background:var(--soft);color:var(--primary);text-align:center;font-size:10px;font-weight:700}
+  .svc-price{font-size:10px;font-weight:700;color:var(--coral)}
+  .svc-name{font-size:10px;font-weight:700;margin-top:7px}
+  .svc-sub{font-size:8px;color:var(--muted);margin-top:1px}
+  .quick-label{font-size:9px;color:var(--muted);margin:8px 0 5px}
+  .summary{margin-top:9px;padding:8px 12px;border-radius:12px;background:#EBF5F0;color:var(--primary);font-size:9px;font-weight:500}
+  .field-label{font-size:9px;color:var(--sub);margin:8px 0 4px}
+  .field-box{height:34px;border-radius:12px;background:#F3F2EE;display:flex;align-items:center;padding:0 11px;font-size:10px;color:#A0A8A3}
+  .form-row{display:flex;gap:7px}
+  .form-row > div{flex:1}
+  .price-bar{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 16px;background:rgba(255,255,255,.94);border-radius:999px;box-shadow:0 20px 50px -12px rgba(22,36,32,.25)}
+  .price-bar .grow{font-size:9px;color:var(--muted)}
+  .price-bar .amount{font-size:16px}
+
+  /* detail */
+  .detail{padding:52px 16px 96px}
+  .detail-hero{position:relative;overflow:hidden;padding:18px;border-radius:26px;background:radial-gradient(circle at 88% 12%,#388C65 0%,#1E6143 52%,#13402B 100%);color:#fff;box-shadow:0 20px 44px -12px rgba(22,74,51,.3)}
+  .detail-no{font-size:8px;color:rgba(255,255,255,.52);letter-spacing:.5px}
+  .detail-headline{font-size:23px;font-weight:700;margin-top:10px}
+  .detail-sub{font-size:10px;color:rgba(255,255,255,.7);margin-top:3px}
+  .detail-amount{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14);font-size:9px;color:rgba(255,255,255,.55)}
+  .detail-amount b{font-size:20px;color:var(--gold)}
+  .timeline{display:flex;margin-top:4px}
+  .step{flex:1;text-align:center;position:relative}
+  .step-line{position:absolute;top:8px;left:50%;width:100%;height:2px;background:#ECEAE4}
+  .step:last-child .step-line{display:none}
+  .step-dot{position:relative;z-index:1;width:17px;height:17px;line-height:15px;margin:0 auto;border-radius:50%;background:#F3F2EE;border:2px solid #E2E0D8;color:#8C9690;font-size:8px}
+  .step.done .step-dot{background:var(--primary);border-color:#D2EADF;color:#fff}
+  .step.done .step-line{background:linear-gradient(90deg,var(--primary),#A5D2BD)}
+  .step.current .step-dot{background:var(--coral);border-color:#FFE4D4;color:#fff;box-shadow:0 0 0 4px rgba(232,122,72,.14)}
+  .step-label{font-size:8px;color:var(--muted);margin-top:5px}
+  .step.done .step-label,.step.current .step-label{color:var(--ink);font-weight:600}
+  .info-row{display:flex;justify-content:space-between;padding:4px 0;font-size:10px}
+  .info-key{color:var(--muted)}
+  .info-val{color:var(--ink)}
+  .divider{height:1px;background:rgba(22,74,51,.06);margin:8px 0}
+  .record-time{font-size:8px;color:var(--muted)}
+  .record-tag{font-size:8px;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--primary)}
+  .record-body{font-size:10px;line-height:1.7;margin-top:4px}
+  .detail-bar{position:absolute;left:14px;right:14px;bottom:14px;display:flex;gap:8px;padding:8px;background:rgba(255,255,255,.94);border-radius:999px;box-shadow:0 20px 50px -12px rgba(22,36,32,.25)}
+  .detail-bar .btn{flex:1;height:40px;font-size:11px}
+  .detail-bar .ghost{flex:0 0 110px;background:#EDF4F0;color:var(--primary)}
+  .caption{font-size:10px;color:var(--muted);margin-top:10px;text-align:center}
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="head">
+      <div>
+        <div class="kicker">SOFT ORGANIC CARE · VISUAL DIRECTION V2</div>
+        <h1>温润流光 · 灵动康养</h1>
+        <p>简约大气 · 流体大圆角 · 弥散光影 · 一键直达；告别方方正正与生硬表格</p>
+      </div>
+      <div class="swatches">
+        <div class="sw" style="background:#164A33"></div>
+        <div class="sw" style="background:#1F6345"></div>
+        <div class="sw" style="background:#F7F6F2"></div>
+        <div class="sw" style="background:#E87A48"></div>
+        <div class="sw" style="background:#F6E3BA"></div>
+      </div>
+    </div>
+
+    <div class="frames">
+      <!-- login -->
+      <div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="login">
+            <div class="login-canvas">
+              <div class="blob a"></div><div class="blob b"></div>
+              <div class="brand-pill"><div class="brand-dot">养</div><span>湘潭社区安心照护</span></div>
+              <div class="login-head">让家里的长辈，<br /><em>有人陪、有人管。</em></div>
+              <div class="login-tags"><span>安心陪诊</span><span>居家保洁</span><span>适老改造</span><span>日常代办</span></div>
+            </div>
+            <div class="login-sheet">
+              <div class="sheet-title">一键快捷登录</div>
+              <div class="sheet-sub">点选身份胶囊，免输入快速体验</div>
+              <div class="role-pill active">
+                <div class="role-icon">家</div>
+                <div class="grow"><div class="role-name">我是家属（张女士）</div><div class="role-desc">预约服务 · 查看陪诊记录</div></div>
+              </div>
+              <div class="role-pill">
+                <div class="role-icon staff">护</div>
+                <div class="grow"><div class="role-name">我是服务人员（王阿姨）</div><div class="role-desc">接单上门 · 拍照留痕</div></div>
+              </div>
+              <div class="input-pill"><span class="input-prefix">手机号</span><span>13800000001</span></div>
+              <div class="input-pill"><span class="input-prefix">验证码</span><span>123456</span><span class="code-badge">演示码</span></div>
+              <div class="btn primary login-btn">立即进入</div>
+              <div class="login-foot">登录即代表同意《隐私政策与长辈照护授权》</div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">登录 · 流体光影 + 悬浮登录岛</div>
+      </div>
+
+      <!-- home -->
+      <div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="home">
+            <div class="hero">
+              <div class="status-pill"><span class="pulse"></span>当前有 2 项照护服务正在跟进</div>
+              <div class="hero-greet">午安，张女士</div>
+              <div class="hero-avatar">张</div>
+              <div class="hero-dock">
+                <div class="dock main"><div class="dock-icon">约</div><div><div class="dock-title">一键预约</div><div class="dock-sub">陪诊 · 保洁 · 代办</div></div></div>
+                <div class="dock"><div class="dock-icon">家</div><div><div class="dock-title">长辈档案</div><div class="dock-sub">地址与健康备注</div></div></div>
+              </div>
+            </div>
+
+            <div class="section"><div class="section-title">为您精选照护</div><div class="section-action">全部服务 ›</div></div>
+            <div class="featured">
+              <div class="between row"><span class="featured-badge">口碑首选 · 专人全程陪同</span><span class="featured-price">¥258<small style="font-size:9px;color:var(--muted);font-weight:500">/半天</small></span></div>
+              <div class="featured-main">
+                <div class="seal">陪</div>
+                <div class="grow"><div class="featured-title">安心陪诊</div><div class="featured-desc">挂号、取号、陪同就诊、记录医嘱，全程有人搭把手。</div></div>
+                <div class="featured-cta">去预约</div>
+              </div>
+            </div>
+            <div class="duo">
+              <div class="duo-card"><div class="between row"><div class="duo-icon">洁</div><div class="duo-price">¥150</div></div><div class="duo-title">居家保洁</div><div class="duo-sub">120分钟 · 上门服务</div></div>
+              <div class="duo-card warm"><div class="between row"><div class="duo-icon">改</div><div class="duo-price">¥99</div></div><div class="duo-title">适老化评估</div><div class="duo-sub">90分钟 · 上门评估</div></div>
+            </div>
+            <div class="caps">
+              <div class="cap"><div class="cap-dot">办</div><span class="cap-name">代办跑腿</span><span class="cap-price">¥30</span></div>
+              <div class="cap"><div class="cap-dot">餐</div><span class="cap-name">助餐配送</span><span class="cap-price">¥15</span></div>
+              <div class="cap"><div class="cap-dot" style="background:#E87A48;color:#fff">急</div><span class="cap-name">紧急联系</span></div>
+            </div>
+            <div class="section"><div class="section-title">跟进中的服务</div><div class="section-action">全部 ›</div></div>
+            <div class="order">
+              <div class="between row"><div class="row"><span style="width:6px;height:6px;border-radius:50%;background:#277A55;margin-right:6px;display:inline-block"></span><span class="order-service">安心陪诊</span></div><span class="tag">待确认</span></div>
+              <div class="order-meta">张爷爷 · 预约 10-30 09:00</div>
+              <div class="between row mt8"><span style="font-size:8px;color:#B0B5AD">ORD202610290001</span><span class="amount" style="font-size:13px">¥258 ›</span></div>
+            </div>
+            <div class="steward"><div class="steward-avatar">管</div><div class="grow"><div class="steward-title">社区专属养老管家</div><div class="steward-sub">不方便打字？点此直接电话帮您安排</div></div><div class="steward-call">呼叫</div></div>
+          </div>
+        </div>
+        <div class="caption">首页 · 灵动 Bento 服务矩阵 + 悬浮管家</div>
+      </div>
+
+      <!-- create -->
+      <div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="create">
+            <div class="create-head"><div class="kicker" style="font-size:8px">BOOK A SERVICE</div><div class="create-title">预约服务</div><div class="create-sub">点选即可，管家会尽快确认安排。</div></div>
+
+            <div class="card">
+              <div class="card-title">1 · 选择长辈</div>
+              <div class="elder-chip active"><div class="elder-avatar">张</div><div><div class="elder-name">张爷爷</div><div class="elder-addr">示范社区 3 栋 201</div></div></div>
+              <div class="elder-chip"><div class="elder-avatar">李</div><div><div class="elder-name">李奶奶</div><div class="elder-addr">示范社区 5 栋 102</div></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">2 · 选择服务</div>
+              <div class="svc-chip active"><div class="svc-top"><div class="svc-icon">陪</div><div class="svc-price">¥258</div></div><div class="svc-name">安心陪诊</div><div class="svc-sub">240分钟</div></div>
+              <div class="svc-chip"><div class="svc-top"><div class="svc-icon">洁</div><div class="svc-price">¥150</div></div><div class="svc-name">居家保洁</div><div class="svc-sub">120分钟</div></div>
+              <div class="svc-chip"><div class="svc-top"><div class="svc-icon">改</div><div class="svc-price">¥99</div></div><div class="svc-name">适老化评估</div><div class="svc-sub">90分钟</div></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">3 · 选择时间</div>
+              <div class="quick-label">日期</div>
+              <div class="chip-row"><div class="chip active">明天</div><div class="chip">后天</div><div class="chip">三天后</div><div class="chip">自定义 ›</div></div>
+              <div class="quick-label">时间段</div>
+              <div class="chip-row"><div class="chip active">09:00</div><div class="chip">10:00</div><div class="chip">14:30</div><div class="chip">16:00</div></div>
+              <div class="summary">已选：2026-10-30 09:00</div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">4 · 上门信息</div>
+              <div class="field-label">服务地址</div><div class="field-box">示范社区 3 栋 201</div>
+              <div class="form-row"><div><div class="field-label">联系人</div><div class="field-box">张爷爷</div></div><div><div class="field-label">电话</div><div class="field-box">138****0001</div></div></div>
+            </div>
+
+            <div class="price-bar"><div class="grow">合计 · 线下收款</div><div class="amount">¥258</div><div class="btn primary" style="padding:0 18px;height:38px;font-size:11px">立即预约</div></div>
+          </div>
+        </div>
+        <div class="caption">预约 · 胶囊直选，少弹窗、少输入</div>
+      </div>
+
+      <!-- detail -->
+      <div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="detail">
+            <div class="detail-hero">
+              <div class="between row"><span class="detail-no">订单 ORD202610290001</span><span class="tag green" style="background:rgba(246,227,186,.16);color:#F6E3BA">已派单</span></div>
+              <div class="detail-headline">已安排服务人员</div>
+              <div class="detail-sub">王阿姨 · 预约 10-30 09:00</div>
+              <div class="detail-amount"><span>订单金额</span><b>¥258</b></div>
+            </div>
+            <div class="card">
+              <div class="between row"><div class="card-title" style="margin:0">服务进度</div><span class="tiny muted">已派单</span></div>
+              <div class="timeline">
+                <div class="step done"><div class="step-line"></div><div class="step-dot">✓</div><div class="step-label">提交</div></div>
+                <div class="step done"><div class="step-line"></div><div class="step-dot">✓</div><div class="step-label">派单</div></div>
+                <div class="step current"><div class="step-line"></div><div class="step-dot"></div><div class="step-label">服务中</div></div>
+                <div class="step"><div class="step-dot"></div><div class="step-label">完成</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">服务详情</div>
+              <div class="info-row"><span class="info-key">服务项目</span><span class="info-val">安心陪诊 · 半天</span></div>
+              <div class="info-row"><span class="info-key">长辈</span><span class="info-val">张爷爷</span></div>
+              <div class="info-row"><span class="info-key">服务人员</span><span class="info-val">王阿姨</span></div>
+              <div class="divider"></div>
+              <div class="info-row"><span class="info-key">地址</span><span class="info-val">示范社区 3 栋 201</span></div>
+              <div class="info-row"><span class="info-key">备注</span><span class="info-val">周三复查，需提前取号</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title">服务记录</div>
+              <div class="between row"><span class="record-time">10-30 09:12</span><span class="record-tag">长辈已确认</span></div>
+              <div class="record-body">已陪同完成复查，医嘱已拍照发给家属；代取药 2 盒。</div>
+            </div>
+            <div class="detail-bar"><div class="btn ghost">联系管家</div><div class="btn primary">取消订单</div></div>
+          </div>
+        </div>
+        <div class="caption">详情 · 流光状态卡 + 灵动进度 + 悬浮操作岛</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

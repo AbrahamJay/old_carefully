@@ -26,8 +26,7 @@
 
     <section class="card warm">
       <h2 class="section-title">演示环境</h2>
-      <p class="small muted mt8">个人小程序主体不支持微信支付；当前支付/退款均为模拟或线下标记。</p>
-      <p class="small muted mt8">家属账号：13800000001 / 123456</p>
+      <p class="small muted mt8">当前小程序为企业主体，微信支付正在接入；现阶段支付/退款为模拟或线下标记。</p>
     </section>
 
     <button class="btn btn-ghost btn-block logout" @click="logout">退出登录</button>

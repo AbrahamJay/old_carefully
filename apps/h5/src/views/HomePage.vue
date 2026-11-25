@@ -129,7 +129,7 @@ onMounted(load)
 </script>
 
 <style scoped>
-.home-page { padding: 22px 18px 108px; }
+.home-page { padding: 22px 18px 108px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .hero-shell { position: relative; overflow: hidden; padding: 5.0667cqw 4.5333cqw 4.5333cqw; border-radius: 6.4cqw 5.3333cqw 7.4667cqw 4.8cqw; background: radial-gradient(circle at 88% 14%, #388C65 0%, #1E6143 52%, #13402B 100%); color: #fff; box-shadow: 0 3.2cqw 6.9333cqw -1.6cqw rgba(22,74,51,.24); }
 .hero-aura { position: absolute; border-radius: 50%; }
 .aura-1 { width: 48cqw; height: 48cqw; right: -16cqw; top: -16cqw; background: radial-gradient(circle, rgba(246,227,186,.24), transparent 70%); }

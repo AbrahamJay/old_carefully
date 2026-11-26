@@ -16,6 +16,7 @@ class ServiceOut(BaseModel):
     unit: str
     active: bool
     sort: int
+    required_skill: str | None = None
 
 
 class ServiceCreate(BaseModel):
@@ -28,3 +29,5 @@ class ServiceCreate(BaseModel):
     unit: str = "次"
     active: bool = True
     sort: int = 0
+    # 派单所需的员工技能；留空表示未配置，候选时不做技能硬过滤
+    required_skill: str | None = Field(default=None, max_length=30)

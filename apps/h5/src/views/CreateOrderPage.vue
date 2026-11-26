@@ -9,7 +9,7 @@
     <div class="page-intro">
       <span class="eyebrow">BOOK A SERVICE</span>
       <h1>预约服务</h1>
-      <p>点选即可，管家会尽快确认安排。</p>
+      <p>选好服务与时间，提交后立即支付定金。</p>
     </div>
 
     <div v-if="loading" class="card"><div class="skeleton" style="height: 20px; width: 40%"></div><div class="skeleton mt12" style="height: 12px; width: 75%"></div></div>
@@ -68,13 +68,15 @@
       <section class="deposit-card">
         <div class="row between"><span>本次预估</span><strong>¥{{ money(selectedService?.price_cents) }}</strong></div>
         <div class="row between mt8"><span>需付定金（30%）</span><strong>¥{{ money(depositCents) }}</strong></div>
-        <p>尾款服务完成后支付；取消订单会自动退已付款。</p>
+        <p>提交预约时即支付定金；尾款服务完成后支付，取消订单会自动退已付款。</p>
       </section>
     </template>
 
     <div class="action-bar">
       <div class="action-price"><small>需付定金</small><strong>¥{{ money(depositCents) }}</strong></div>
-      <button class="btn btn-primary" :disabled="loading || !form.elder_id || !form.service_id" @click="submit">立即预约</button>
+      <button class="btn btn-primary" :disabled="loading || submitting || !form.elder_id || !form.service_id" @click="submit">
+        {{ submitting ? '支付中…' : '预约并付定金' }}
+      </button>
     </div>
   </main>
 </template>
@@ -91,6 +93,7 @@ const router = useRouter()
 const elders = ref<any[]>([])
 const services = ref<any[]>([])
 const loading = ref(true)
+const submitting = ref(false)
 
 function localDate(offset = 0) {
   const d = new Date(Date.now() + offset * 86400000)
@@ -161,11 +164,13 @@ async function load() {
 }
 
 async function submit() {
+  if (submitting.value) return
   if (!form.elder_id || !form.service_id) {
     showToast('请选择长辈和服务')
     return
   }
   const scheduled = `${form.date}T${form.time}:00`
+  submitting.value = true
   try {
     const order = await post<any>('/orders', {
       elder_id: form.elder_id,
@@ -176,10 +181,22 @@ async function submit() {
       contact_phone: form.contact_phone,
       notes: form.notes
     })
-    showToast('预约已提交')
+    // 预约即付定金：创建成功后立刻发起支付；支付失败不阻断下单，可到详情页重试
+    if (Number(order.deposit_cents || 0) > 0) {
+      try {
+        await post(`/orders/${order.id}/pay`)
+        showToast('预约成功，定金已支付')
+      } catch (e: any) {
+        showToast(e.message || '预约已提交，定金待支付')
+      }
+    } else {
+      showToast('预约已提交')
+    }
     router.replace(`/orders/${order.id}`)
   } catch (e: any) {
     showToast(e.message || '预约失败')
+  } finally {
+    submitting.value = false
   }
 }
 

@@ -148,6 +148,7 @@ def seed(db: Session | None = None) -> None:
                 duration_minutes=240,
                 unit="半天",
                 sort=1,
+                required_skill="陪诊",
             ),
             Service(
                 code="cleaning",
@@ -158,6 +159,7 @@ def seed(db: Session | None = None) -> None:
                 duration_minutes=120,
                 unit="2小时",
                 sort=2,
+                required_skill="保洁",
             ),
             Service(
                 code="renovation",
@@ -168,6 +170,7 @@ def seed(db: Session | None = None) -> None:
                 duration_minutes=90,
                 unit="次",
                 sort=3,
+                required_skill="适老化评估",
             ),
             Service(
                 code="errand",
@@ -178,6 +181,7 @@ def seed(db: Session | None = None) -> None:
                 duration_minutes=60,
                 unit="次",
                 sort=4,
+                required_skill="代办",
             ),
             Service(
                 code="meal",
@@ -188,6 +192,7 @@ def seed(db: Session | None = None) -> None:
                 duration_minutes=30,
                 unit="餐",
                 sort=5,
+                required_skill="助餐",
             ),
         ]
         session.add_all(services)

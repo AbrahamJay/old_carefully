@@ -15,6 +15,7 @@ from ..modules.files.router import router as files_router
 from ..modules.notifications.router import router as notifications_router
 from ..modules.orders.router import router as orders_router
 from ..modules.org.router import router as org_router
+from ..modules.tasks.router import router as tasks_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -27,6 +28,7 @@ for module_router in (
     notifications_router,
     org_router,
     admin_router,
+    tasks_router,
 ):
     api_router.include_router(module_router)
 

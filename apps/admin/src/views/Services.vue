@@ -27,6 +27,12 @@
           <template #default="{ row }">¥{{ money(row.price_cents) }}</template>
         </el-table-column>
         <el-table-column prop="duration_minutes" label="时长(分)" width="100" />
+        <el-table-column label="所需技能" width="120">
+          <template #default="{ row }">
+            <el-tag v-if="row.required_skill" type="success">{{ row.required_skill }}</el-tag>
+            <span v-else class="page-sub">未配置</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="description" label="说明" min-width="260" show-overflow-tooltip />
         <el-table-column label="小程序展示" width="100">
           <template #default="{ row }"><el-tag :type="row.active ? 'success' : 'info'">{{ row.active ? '展示' : '隐藏' }}</el-tag></template>
@@ -63,10 +69,16 @@
             <el-option label="适老化" value="renovation" />
             <el-option label="代办" value="errand" />
             <el-option label="助餐" value="meal" />
+            <el-option label="助浴" value="bath" />
+            <el-option label="水电维修" value="repair" />
+            <el-option label="用药提醒" value="medication" />
           </el-select>
         </el-form-item>
         <el-form-item label="价格(元)"><el-input-number v-model="form.priceYuan" :min="0" :precision="2" style="width: 100%" /></el-form-item>
         <el-form-item label="时长(分)"><el-input-number v-model="form.duration_minutes" :min="0" style="width: 100%" /></el-form-item>
+        <el-form-item label="所需技能">
+          <el-input v-model="form.required_skill" placeholder="例如 陪诊；留空表示不做技能硬过滤" />
+        </el-form-item>
         <el-form-item label="说明"><el-input v-model="form.description" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="上架"><el-switch v-model="form.active" /></el-form-item>
       </el-form>
@@ -92,7 +104,7 @@ const pagedServices = computed(() =>
 )
 const activeCount = computed(() => services.value.filter(item => item.active).length)
 const visible = ref(false)
-const form = reactive<any>({ id: 0, code: '', name: '', category: 'companion', description: '', priceYuan: 0, duration_minutes: 60, active: true, sort: 0 })
+const form = reactive<any>({ id: 0, code: '', name: '', category: 'companion', description: '', priceYuan: 0, duration_minutes: 60, active: true, sort: 0, required_skill: '' })
 
 function money(cents: number) { return ((cents || 0) / 100).toFixed(2).replace('.00', '') }
 async function load() {
@@ -103,7 +115,7 @@ async function load() {
   } finally { loading.value = false }
 }
 function openCreate() {
-  Object.assign(form, { id: 0, code: '', name: '', category: 'companion', description: '', priceYuan: 0, duration_minutes: 60, active: true, sort: 0 })
+  Object.assign(form, { id: 0, code: '', name: '', category: 'companion', description: '', priceYuan: 0, duration_minutes: 60, active: true, sort: 0, required_skill: '' })
   visible.value = true
 }
 function openEdit(row: any) {
@@ -134,7 +146,8 @@ async function toggleActive(row: any) {
       duration_minutes: row.duration_minutes,
       unit: row.unit,
       active: !row.active,
-      sort: row.sort
+      sort: row.sort,
+      required_skill: row.required_skill || null
     }
   })
   ElMessage.success(action + '成功')
@@ -155,7 +168,8 @@ async function save() {
     duration_minutes: Number(form.duration_minutes),
     unit: form.unit || '次',
     active: form.active,
-    sort: Number(form.sort || 0)
+    sort: Number(form.sort || 0),
+    required_skill: (form.required_skill || '').trim() || null
   }
   if (form.id) {
     await request('/admin/services/' + form.id, { method: 'PATCH', body: payload })

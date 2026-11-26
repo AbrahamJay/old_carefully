@@ -62,9 +62,9 @@
         <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openDetail(row)">详情</el-button>
-            <el-button v-if="row.status === 'pending_confirm'" link type="success" @click="confirmOrder(row)">确认</el-button>
-            <el-button v-if="row.status === 'confirmed'" link type="warning" @click="openAssign(row)">派单</el-button>
-            <el-button v-if="row.status === 'assigned'" link type="warning" @click="openAssign(row)">改派</el-button>
+            <el-button v-if="canConfirmOrAssign(row, 'pending_confirm')" link type="success" @click="confirmOrder(row)">确认</el-button>
+            <el-button v-if="canConfirmOrAssign(row, 'confirmed')" link type="warning" @click="openAssign(row)">派单</el-button>
+            <el-button v-if="canConfirmOrAssign(row, 'assigned')" link type="warning" @click="openAssign(row)">改派</el-button>
             <el-button v-if="canMarkPaid(row)" link type="success" @click="markPaid(row)">{{ payActionText(row) }}</el-button>
             <el-button v-if="canRefund(row)" link type="danger" @click="refundOrder(row)">退款</el-button>
           </template>
@@ -106,9 +106,9 @@
         </el-descriptions>
 
         <div class="detail-actions">
-          <el-button v-if="detail.status === 'pending_confirm'" type="success" @click="confirmOrder(detail)">确认订单</el-button>
-          <el-button v-if="detail.status === 'confirmed'" type="warning" @click="openAssign(detail)">派单</el-button>
-          <el-button v-if="detail.status === 'assigned'" type="warning" @click="openAssign(detail)">改派</el-button>
+          <el-button v-if="canConfirmOrAssign(detail, 'pending_confirm')" type="success" @click="confirmOrder(detail)">确认订单</el-button>
+          <el-button v-if="canConfirmOrAssign(detail, 'confirmed')" type="warning" @click="openAssign(detail)">派单</el-button>
+          <el-button v-if="canConfirmOrAssign(detail, 'assigned')" type="warning" @click="openAssign(detail)">改派</el-button>
           <el-button v-if="canMarkPaid(detail)" type="success" @click="markPaid(detail)">{{ payActionText(detail) }}</el-button>
           <el-button v-if="canRefund(detail)" type="danger" @click="refundOrder(detail)">退款</el-button>
         </div>
@@ -172,8 +172,11 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { request } from '../api'
+
+const route = useRoute()
 
 // 图片地址由后端返回相对路径（/api/v1/files/<key>），必须保持同源：
 // 开发走 vite 代理，生产走入口 nginx 的 /api/ 反代，不能再拼 127.0.0.1。
@@ -219,6 +222,10 @@ function payActionText(row: any) {
 }
 function canRefund(row: any) {
   return Number(row.paid_cents || 0) > 0 && row.payment_status !== 'refunded'
+}
+// 已退款订单只留历史：不再允许确认/派单/改派，等人工或系统把它收尾到已取消
+function canConfirmOrAssign(row: any, status: string) {
+  return row.status === status && row.payment_status !== 'refunded'
 }
 function formatTime(value: string) { return value ? value.replace('T', ' ').slice(0, 16) : '' }
 
@@ -337,7 +344,11 @@ async function refundOrder(row: any) {
 }
 
 onMounted(async () => {
+  // 异常巡检「去处理这一单」带订单号跳过来：定位到该单并展开详情
+  const fromQuery = route.query.keyword
+  if (typeof fromQuery === 'string' && fromQuery) keyword.value = fromQuery
   await Promise.all([load(), loadStations()])
+  if (keyword.value && orders.value.length === 1) await openDetail(orders.value[0])
 })
 </script>
 

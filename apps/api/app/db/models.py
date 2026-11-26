@@ -7,22 +7,25 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..core.enums import StorageProvider
+from ..core.enums import StorageProvider, TaskStatus
 from ..core.time import utcnow
 from .base import Base
 
@@ -33,6 +36,7 @@ def _json_type() -> JSONB:
 
 
 __all__ = [
+    "AdminTask",
     "AuditLog",
     "Consent",
     "Elder",
@@ -44,6 +48,7 @@ __all__ = [
     "Review",
     "Service",
     "ServiceRecord",
+    "StaffLeave",
     "StaffProfile",
     "Station",
     "Supplier",
@@ -98,8 +103,39 @@ class StaffProfile(Base):
     rating: Mapped[float] = mapped_column(Float, default=5.0)
     status: Mapped[str] = mapped_column(String(20), default="active")
 
+    # 可用性：MVP 只做「工作日 + 固定起止时间 + 每日容量」，多班次留到后续拆表。
+    # work_days 用 ISO 星期：1=周一 … 7=周日；时间用「当天第几分钟」，避免时区歧义。
+    work_days: Mapped[list[int]] = mapped_column(
+        _json_type(),
+        default=lambda: [1, 2, 3, 4, 5, 6, 7],
+        server_default=text("'[1,2,3,4,5,6,7]'::jsonb"),
+    )
+    work_start_minute: Mapped[int] = mapped_column(Integer, default=480, server_default="480")
+    work_end_minute: Mapped[int] = mapped_column(Integer, default=1080, server_default="1080")
+    daily_capacity: Mapped[int] = mapped_column(Integer, default=4, server_default="4")
+    accepting_orders: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=text("true")
+    )
+
     user: Mapped[User] = relationship()
     supplier: Mapped[Supplier | None] = relationship()
+
+
+class StaffLeave(Base):
+    """员工请假：按天粒度，命中当天即不参与候选。"""
+
+    __tablename__ = "staff_leaves"
+    __table_args__ = (
+        UniqueConstraint("staff_id", "leave_date", name="uq_staff_leaves_staff_date"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    staff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    leave_date: Mapped[date] = mapped_column(Date, nullable=False)
+    reason: Mapped[str] = mapped_column(String(100), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    staff: Mapped[User] = relationship()
 
 
 class Supplier(Base):
@@ -172,10 +208,16 @@ class Service(Base):
     unit: Mapped[str] = mapped_column(String(20), default="次")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort: Mapped[int] = mapped_column(Integer, default=0)
+    # 派单所需的技能映射；为空表示未配置，候选时不做技能硬过滤但会标记数据缺口
+    required_skill: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        # 异常巡检按「状态 + 停留时长」扫描，updated_at 会被任意字段刷新，不能替代
+        Index("ix_orders_status_status_changed_at", "status", "status_changed_at"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     order_no: Mapped[str] = mapped_column(String(40), unique=True, index=True)
@@ -193,6 +235,10 @@ class Order(Base):
     deposit_cents: Mapped[int] = mapped_column(Integer, default=0)
     payment_status: Mapped[str] = mapped_column(String(30), default="unpaid", index=True)
     cancel_reason: Mapped[str] = mapped_column(String(255), default="")
+    # 仅在订单状态真正变化时刷新；改地址/备注等字段不刷新
+    status_changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=text("now()")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -339,3 +385,36 @@ class UploadedFile(Base):
     # 记录落地的存储介质：切换 provider 后旧文件仍能从原介质读回
     storage: Mapped[str] = mapped_column(String(20), default=StorageProvider.LOCAL)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AdminTask(Base):
+    """异常巡检任务队列。
+
+    ``dedupe_key`` 由「类型 + 订单 + 状态时间」组成，同一订单同一状态只保留一条；
+    扫描用 ``INSERT ... ON CONFLICT`` 刷新事实，条件消失后自动置 ``resolved``。
+    """
+
+    __tablename__ = "admin_tasks"
+    __table_args__ = (
+        Index("ix_admin_tasks_status_severity", "status", "severity", "detected_at"),
+        Index("ix_admin_tasks_order_type", "order_id", "type", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    type: Mapped[str] = mapped_column(String(40))
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+    severity: Mapped[str] = mapped_column(String(10))
+    status: Mapped[str] = mapped_column(String(20), default=TaskStatus.OPEN)
+    dedupe_key: Mapped[str] = mapped_column(String(120), unique=True)
+    title: Mapped[str] = mapped_column(String(120), default="")
+    detail: Mapped[dict] = mapped_column(_json_type(), default=dict)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    handled_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    handled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    note: Mapped[str] = mapped_column(String(255), default="")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    order: Mapped[Order] = relationship()

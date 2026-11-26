@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from './layout/AdminLayout.vue'
 import Login from './views/Login.vue'
 import Dashboard from './views/Dashboard.vue'
+import DispatchWorkbench from './views/DispatchWorkbench.vue'
+import Anomalies from './views/Anomalies.vue'
 import Orders from './views/Orders.vue'
 import Elders from './views/Elders.vue'
 import Services from './views/Services.vue'
@@ -19,6 +21,8 @@ const router = createRouter({
       component: AdminLayout,
       children: [
         { path: '', component: Dashboard },
+        { path: 'dispatch', component: DispatchWorkbench },
+        { path: 'anomalies', component: Anomalies },
         { path: 'orders', component: Orders },
         { path: 'elders', component: Elders },
         { path: 'services', component: Services },

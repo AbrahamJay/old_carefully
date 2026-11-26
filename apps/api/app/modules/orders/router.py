@@ -6,9 +6,12 @@ from ...api.deps import get_current_user, get_order_service, require_roles
 from ...api.schemas import Page
 from ...core.enums import Role
 from ...db.models import Order, User
-from .presenters import to_detail, to_list_item, to_record
+from .presenters import to_candidates, to_detail, to_list_item, to_record
 from .schemas import (
     AssignIn,
+    CandidatesOut,
+    ConfirmAndAssignIn,
+    DispatchSummaryOut,
     OrderCreate,
     OrderDetailOut,
     OrderListItem,
@@ -92,6 +95,41 @@ def assign_order(
     service: OrderService = Depends(get_order_service),
 ) -> OrderDetailOut:
     return _detail(service, service.assign(user, order_id, payload.staff_id))
+
+
+@router.get("/admin/orders/{order_id}/candidates", response_model=CandidatesOut)
+def order_candidates(
+    order_id: int,
+    user: User = Depends(require_roles(Role.ADMIN)),
+    service: OrderService = Depends(get_order_service),
+) -> CandidatesOut:
+    """规则候选：硬过滤 + 100 分排序，只读接口。"""
+    return to_candidates(service.list_candidates(user, order_id))
+
+
+@router.post("/admin/orders/{order_id}/confirm-and-assign", response_model=OrderDetailOut)
+def confirm_and_assign_order(
+    order_id: int,
+    payload: ConfirmAndAssignIn,
+    user: User = Depends(require_roles(Role.ADMIN)),
+    service: OrderService = Depends(get_order_service),
+) -> OrderDetailOut:
+    """确认 + 派单：单事务执行，失败不产生「已确认未派单」。"""
+    return _detail(
+        service,
+        service.confirm_and_assign(
+            user, order_id, payload.staff_id, payload.expected_updated_at
+        ),
+    )
+
+
+@router.get("/admin/dispatch/summary", response_model=DispatchSummaryOut)
+def dispatch_summary(
+    _: User = Depends(require_roles(Role.ADMIN)),
+    service: OrderService = Depends(get_order_service),
+) -> DispatchSummaryOut:
+    """派单工作台顶部指标（待确认/待派单/今日已派/今日已处理）。"""
+    return service.dispatch_summary()
 
 
 @router.post("/orders/{order_id}/accept", response_model=OrderDetailOut)

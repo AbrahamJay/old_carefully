@@ -28,6 +28,30 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
+# API 与 worker 共用同一套环境变量：worker 也要通过 prod 校验与存储配置校验
+x-api-env: &api-env
+  # 连接串在这里拼，.env 里不重复写密码（密码必须是 URL 安全字符）
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-socialoldcare}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-socialoldcare}
+  APP_ENV: ${APP_ENV:-prod}
+  JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+  JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-1440}
+  ALLOW_DEMO_LOGIN: ${ALLOW_DEMO_LOGIN:-false}
+  AUTO_SEED: ${AUTO_SEED:-false}
+  AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://120.53.13.162}
+  STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?set MINIO_ACCESS_KEY in .env}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?set MINIO_SECRET_KEY in .env}
+  MINIO_BUCKET: ${MINIO_BUCKET:-socialoldcare-media}
+  MINIO_SECURE: ${MINIO_SECURE:-false}
+  MINIO_PUBLIC_BASE_URL: ${MINIO_PUBLIC_BASE_URL:-http://120.53.13.162:9000/socialoldcare-media}
+  FILE_DELIVERY: ${FILE_DELIVERY:-redirect}
+  REQUIRE_FILE_AUTH: ${REQUIRE_FILE_AUTH:-false}
+  UPLOAD_DIR: /app/uploads
+  BUSINESS_TIMEZONE: ${BUSINESS_TIMEZONE:-Asia/Shanghai}
+  TZ: Asia/Shanghai
+
 services:
   # ---------------------------------------------------------------- 后端
   api:
@@ -40,28 +64,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      # 连接串在这里拼，.env 里不重复写密码（密码必须是 URL 安全字符）
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-socialoldcare}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-socialoldcare}
-      APP_ENV: ${APP_ENV:-prod}
-      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
-      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-1440}
-      ALLOW_DEMO_LOGIN: ${ALLOW_DEMO_LOGIN:-false}
-      AUTO_SEED: ${AUTO_SEED:-false}
-      AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://120.53.13.162}
-      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-minio}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?set MINIO_ACCESS_KEY in .env}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?set MINIO_SECRET_KEY in .env}
-      MINIO_BUCKET: ${MINIO_BUCKET:-socialoldcare-media}
-      MINIO_SECURE: ${MINIO_SECURE:-false}
-      MINIO_PUBLIC_BASE_URL: ${MINIO_PUBLIC_BASE_URL:-http://120.53.13.162:9000/socialoldcare-media}
-      FILE_DELIVERY: ${FILE_DELIVERY:-redirect}
-      REQUIRE_FILE_AUTH: ${REQUIRE_FILE_AUTH:-false}
-      UPLOAD_DIR: /app/uploads
-      BUSINESS_TIMEZONE: ${BUSINESS_TIMEZONE:-Asia/Shanghai}
-      TZ: Asia/Shanghai
+    environment: *api-env
     extra_hosts:
       # MinIO 是宿主机二进制（非容器）时，用 host.docker.internal:9000 访问它
       - "host.docker.internal:host-gateway"
@@ -77,6 +80,29 @@ services:
       timeout: 5s
       retries: 5
       start_period: 40s
+    networks: [backend]
+    logging: *default-logging
+
+  # ------------------------------------------------- 异常巡检 worker
+  # 复用 API 镜像，只跑扫描循环；数据库迁移仍由 API 启动时执行
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    image: socialoldcare/api:0.2.0
+    container_name: socialoldcare-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      <<: *api-env
+      # worker 不建表：迁移由 api 负责，避免两个进程同时 upgrade
+      AUTO_MIGRATE: "false"
+      ANOMALY_SCAN_ENABLED: ${ANOMALY_SCAN_ENABLED:-true}
+      ANOMALY_SCAN_INTERVAL_MINUTES: ${ANOMALY_SCAN_INTERVAL_MINUTES:-10}
+    command: ["python", "-m", "app.jobs.worker"]
+    depends_on:
+      - api
     networks: [backend]
     logging: *default-logging
 

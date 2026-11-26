@@ -36,6 +36,8 @@ from ..modules.orders import OrderService
 from ..modules.orders.repository import OrderRepository
 from ..modules.org import StaffService, StationService, SupplierService
 from ..modules.payments import PaymentService
+from ..modules.tasks import TaskService
+from ..modules.tasks.repository import TaskRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -160,6 +162,13 @@ def get_admin_service(
     audit: AuditService = Depends(get_audit_service),
 ) -> AdminService:
     return AdminService(db, OrderRepository(db), audit)
+
+
+def get_task_service(
+    db: Session = Depends(get_db),
+    audit: AuditService = Depends(get_audit_service),
+) -> TaskService:
+    return TaskService(db, TaskRepository(db), audit)
 
 
 def get_file_service(

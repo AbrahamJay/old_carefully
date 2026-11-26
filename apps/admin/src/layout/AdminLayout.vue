@@ -12,6 +12,14 @@
       <div class="menu-label">工作台</div>
       <el-menu :default-active="route.path" router class="menu">
         <el-menu-item index="/">今日概览</el-menu-item>
+        <el-menu-item index="/dispatch">
+          <span>派单工作台</span>
+          <span v-if="pendingBadge" class="menu-badge">{{ pendingBadge }}</span>
+        </el-menu-item>
+        <el-menu-item index="/anomalies">
+          <span>异常巡检</span>
+          <span v-if="anomalyBadge" class="menu-badge">{{ anomalyBadge }}</span>
+        </el-menu-item>
         <el-menu-item index="/orders">服务订单</el-menu-item>
         <el-menu-item index="/elders">长辈档案</el-menu-item>
         <el-menu-item index="/services">服务项目</el-menu-item>
@@ -46,11 +54,49 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getUser, logout } from '../api'
+import { getUser, logout, request } from '../api'
 
 const route = useRoute()
 const user = getUser()
+const pendingBadge = ref(0)
+const anomalyBadge = ref(0)
+let timer: number | undefined
+
+async function loadBadges() {
+  // 两块角标独立失败：任一接口异常不影响另一个
+  try {
+    const data = await request('/admin/dispatch/summary')
+    pendingBadge.value = Number(data.pending_confirm || 0) + Number(data.confirmed || 0)
+  } catch {
+    // 角标失败不影响页面；登录过期由 request 统一处理
+  }
+  try {
+    const data = await request('/admin/tasks/summary')
+    anomalyBadge.value = Number(data.open || 0)
+  } catch {
+    // 异常巡检关闭或接口失败时保持不显示
+  }
+}
+
+function handleRefresh() {
+  loadBadges()
+}
+
+onMounted(() => {
+  loadBadges()
+  // 工作台/异常页操作后主动刷新角标；另外每 60 秒兜底同步一次
+  window.addEventListener('dispatch:refresh', handleRefresh)
+  window.addEventListener('anomaly:refresh', handleRefresh)
+  timer = window.setInterval(loadBadges, 60000)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('dispatch:refresh', handleRefresh)
+  window.removeEventListener('anomaly:refresh', handleRefresh)
+  if (timer) window.clearInterval(timer)
+})
 
 function handleLogout() {
   logout()
@@ -128,6 +174,17 @@ function handleLogout() {
   background: rgba(246, 227, 186, 0.16);
   color: #F6E3BA;
   font-weight: 600;
+}
+.menu-badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(246, 227, 186, 0.22);
+  color: #F6E3BA;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
 }
 .aside-foot {
   position: relative;

@@ -72,6 +72,20 @@ class Settings(BaseSettings):
     online_payment_provider: Literal["mock", "wechat"] = "mock"
     notification_provider: Literal["db"] = "db"
 
+    # --- 派单 ---
+    # 关闭后候选接口直接返回 503，前端回退到手工员工列表
+    candidate_ranking_enabled: bool = True
+
+    # --- 异常巡检 ---
+    # 关闭后 worker 跳过扫描、异常巡检接口返回 503、前端隐藏入口
+    anomaly_scan_enabled: bool = True
+    anomaly_scan_interval_minutes: int = 10
+    anomaly_pending_confirm_minutes: int = 120
+    anomaly_confirmed_unassigned_minutes: int = 60
+    anomaly_assigned_not_accepted_minutes: int = 30
+    anomaly_in_service_overrun_minutes: int = 60
+    anomaly_balance_due_hours: int = 24
+
     # --- Agent（预留，暂未启用）---
     agent_enabled: bool = False
     llm_provider: str = "openai_compatible"

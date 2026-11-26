@@ -84,3 +84,30 @@ class StorageProvider(StrEnum):
 class BindingStatus(StrEnum):
     ACTIVE = "active"
     REVOKED = "revoked"
+
+
+class AnomalyType(StrEnum):
+    """异常巡检类型，与 ``admin_tasks.type`` 一致。"""
+
+    PENDING_TIMEOUT = "pending_timeout"
+    CONFIRMED_UNASSIGNED = "confirmed_unassigned"
+    ASSIGNED_NOT_ACCEPTED = "assigned_not_accepted"
+    IN_SERVICE_OVERRUN = "in_service_overrun"
+    BALANCE_DUE = "balance_due"
+    MISSING_RECORD = "missing_record"
+
+
+class TaskSeverity(StrEnum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class TaskStatus(StrEnum):
+    """异常任务状态：open/snoozed 会被下次扫描继续跟踪，其余为终态。"""
+
+    OPEN = "open"
+    SNOOZED = "snoozed"
+    HANDLED = "handled"
+    IGNORED = "ignored"
+    RESOLVED = "resolved"

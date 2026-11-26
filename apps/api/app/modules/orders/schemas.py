@@ -106,5 +106,60 @@ class AssignIn(BaseModel):
     staff_id: int
 
 
+class ConfirmAndAssignIn(BaseModel):
+    staff_id: int
+    # 乐观并发：前端从订单详情带入 updated_at，防止两个人同时处理同一单
+    expected_updated_at: datetime | None = None
+
+
+class DispatchSummaryOut(BaseModel):
+    """派单工作台顶部指标，全部由后端实时统计。"""
+
+    pending_confirm: int = 0
+    confirmed: int = 0
+    dispatched_today: int = 0
+    handled_today: int = 0
+
+
+class CandidateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    staff_id: int
+    name: str
+    station_id: int | None = None
+    station_name: str = ""
+    skills: list[str] = Field(default_factory=list)
+    rating: float = 5.0
+    score: int = 0
+    load: int = 0
+    capacity: int = 0
+    reasons: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+class ExcludedCandidateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    staff_id: int
+    name: str
+    reasons: list[str] = Field(default_factory=list)
+
+
+class CandidateRecommendationOut(BaseModel):
+    staff_id: int
+    name: str
+    score: int
+
+
+class CandidatesOut(BaseModel):
+    order_id: int
+    generated_at: datetime
+    required_skill: str | None = None
+    candidates: list[CandidateOut] = Field(default_factory=list)
+    excluded: list[ExcludedCandidateOut] = Field(default_factory=list)
+    data_gaps: list[str] = Field(default_factory=list)
+    recommendation: CandidateRecommendationOut | None = None
+
+
 class PaymentMarkIn(BaseModel):
     method: str = "offline"

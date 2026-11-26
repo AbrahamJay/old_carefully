@@ -111,7 +111,7 @@
     <view class="row between">
       <view>
         <view class="small">本次预估</view>
-        <view class="micro mt8">需付定金（30%）¥{{depositPrice || '—'}}，尾款服务完成后支付</view>
+        <view class="micro mt8">提交后立即支付定金（30%）¥{{depositPrice || '—'}}，尾款服务完成后支付</view>
       </view>
       <view class="amount">¥{{servicePrice || '—'}}</view>
     </view>
@@ -122,6 +122,6 @@
       <view class="micro muted">需付定金</view>
       <view class="amount">¥{{depositPrice || '—'}}</view>
     </view>
-    <button class="btn-primary" loading="{{loading}}" bindtap="submit">立即预约</button>
+    <button class="btn-primary" loading="{{loading}}" bindtap="submit">预约并付定金</button>
   </view>
 </view>

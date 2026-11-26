@@ -84,3 +84,50 @@ class StorageProvider(StrEnum):
 class BindingStatus(StrEnum):
     ACTIVE = "active"
     REVOKED = "revoked"
+
+
+class AnomalyType(StrEnum):
+    """异常巡检类型，与 ``admin_tasks.type`` 一致。"""
+
+    PENDING_TIMEOUT = "pending_timeout"
+    CONFIRMED_UNASSIGNED = "confirmed_unassigned"
+    ASSIGNED_NOT_ACCEPTED = "assigned_not_accepted"
+    IN_SERVICE_OVERRUN = "in_service_overrun"
+    BALANCE_DUE = "balance_due"
+    MISSING_RECORD = "missing_record"
+
+
+class TaskSeverity(StrEnum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class TaskStatus(StrEnum):
+    """异常任务状态：open/snoozed 会被下次扫描继续跟踪，其余为终态。"""
+
+    OPEN = "open"
+    SNOOZED = "snoozed"
+    HANDLED = "handled"
+    IGNORED = "ignored"
+    RESOLVED = "resolved"
+
+
+class AgentScenario(StrEnum):
+    """Agent 场景标识，同时写入 ``agent_actions.scenario``。"""
+
+    RECORD_DRAFT = "record_draft"
+    PREP_BRIEF = "prep_brief"
+    # 管理端两个场景：规则算事实，模型只负责解释，不参与决策
+    DISPATCH_SUGGEST = "dispatch_suggest"
+    TASK_EXPLAIN = "task_explain"
+    # 员工「这单助手」：绑定单张订单的窄问答，不是通用助手
+    CHAT = "chat"
+
+
+class AgentActionStatus(StrEnum):
+    """单次 Agent 调用的结果：失败也要落库，否则无法统计可用率。"""
+
+    OK = "ok"
+    FAILED = "failed"
+    BLOCKED = "blocked"

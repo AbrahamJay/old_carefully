@@ -57,3 +57,65 @@
   border-radius: 999rpx;
   background: #E6F3EC;
 }
+
+/* AI 服务前提示与草稿区：视觉上与手工填写区分开，强调可跳过 */
+.ai-list { margin-top: 16rpx; }
+.ai-item {
+  position: relative;
+  padding-left: 26rpx;
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: #1A2420;
+}
+.ai-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 16rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #1F6345;
+}
+/* 输入框下方一行：左侧说明，右侧小胶囊按钮 */
+.ai-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 12rpx;
+}
+.ai-bar .helper {
+  flex: 1;
+  margin-top: 0;
+  padding-left: 0;
+}
+.ai-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: auto;
+  height: 60rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  font-size: 25rpx;
+  font-weight: 600;
+  line-height: 1;
+  background: #EDF4F0;
+  color: #1F6345;
+}
+/* 输入框为空或正在润色时按钮不可点 */
+.is-disabled {
+  opacity: 0.45;
+}
+.ai-undo {
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  color: #7C8A84;
+}
+.ai-undo-link {
+  color: #1F6345;
+  text-decoration: underline;
+}

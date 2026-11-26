@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 
 from ...api.deps import (
@@ -13,6 +15,9 @@ from ...core.enums import Role
 from ...db.models import User
 from .schemas import (
     StaffCreate,
+    StaffLeaveCreate,
+    StaffLeaveDeleteOut,
+    StaffLeaveOut,
     StaffOut,
     StaffUpdate,
     StationCreate,
@@ -89,6 +94,60 @@ def admin_update_staff(
     service: StaffService = Depends(get_staff_service),
 ) -> StaffOut:
     return service.update(staff_id, payload)
+
+
+# --------------------------------------------------------------------- 请假
+@router.get("/admin/staff/{staff_id}/leaves", response_model=list[StaffLeaveOut])
+def admin_list_staff_leaves(
+    staff_id: int,
+    from_date: date | None = Query(default=None),
+    to_date: date | None = Query(default=None),
+    _: User = Depends(require_roles(Role.ADMIN)),
+    service: StaffService = Depends(get_staff_service),
+) -> list[StaffLeaveOut]:
+    return [
+        StaffLeaveOut.model_validate(item)
+        for item in service.list_leaves(staff_id, from_date=from_date, to_date=to_date)
+    ]
+
+
+@router.post(
+    "/admin/staff/{staff_id}/leaves", response_model=list[StaffLeaveOut], status_code=201
+)
+def admin_add_staff_leaves(
+    staff_id: int,
+    payload: StaffLeaveCreate,
+    _: User = Depends(require_roles(Role.ADMIN)),
+    service: StaffService = Depends(get_staff_service),
+) -> list[StaffLeaveOut]:
+    """按日期区间请假：区间内每天一条，已存在的当天记录只更新备注。"""
+    return [
+        StaffLeaveOut.model_validate(item)
+        for item in service.add_leaves(staff_id, payload)
+    ]
+
+
+@router.delete("/admin/staff/{staff_id}/leaves", response_model=StaffLeaveDeleteOut)
+def admin_delete_staff_leaves(
+    staff_id: int,
+    from_date: date = Query(...),
+    to_date: date | None = Query(default=None),
+    _: User = Depends(require_roles(Role.ADMIN)),
+    service: StaffService = Depends(get_staff_service),
+) -> StaffLeaveDeleteOut:
+    """按日期区间整段删除请假记录。"""
+    deleted = service.delete_leaves(staff_id, from_date=from_date, to_date=to_date)
+    return StaffLeaveDeleteOut(deleted=deleted)
+
+
+@router.delete("/admin/staff/{staff_id}/leaves/{leave_id}", status_code=204)
+def admin_delete_staff_leave(
+    staff_id: int,
+    leave_id: int,
+    _: User = Depends(require_roles(Role.ADMIN)),
+    service: StaffService = Depends(get_staff_service),
+) -> None:
+    service.delete_leave(staff_id, leave_id)
 
 
 # ------------------------------------------------------------------- 供给方

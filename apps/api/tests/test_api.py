@@ -404,6 +404,66 @@ def test_cancel_order_refunds_deposit(client: TestClient) -> None:
     assert body["refunded_cents"] == body["paid_cents"]
 
 
+def test_refund_cancels_unstarted_order_and_blocks_dispatch(client: TestClient) -> None:
+    """退款即终止：未开始服务的订单退款后自动取消，不能再派单。"""
+    customer = _token(client, "13800000001")
+    admin = _headers(_admin_token(client))
+    headers = _headers(customer)
+    elders = client.get("/api/v1/elders", headers=headers).json()
+    services = client.get("/api/v1/services").json()
+    create = client.post(
+        "/api/v1/orders",
+        headers=headers,
+        json={
+            "elder_id": elders[0]["id"],
+            "service_id": services[0]["id"],
+            "scheduled_at": (datetime.now(timezone.utc) + timedelta(days=4)).isoformat(),
+        },
+    )
+    assert create.status_code == 201, create.text
+    order_id = create.json()["id"]
+
+    confirm = client.post(f"/api/v1/orders/{order_id}/confirm", headers=admin)
+    assert confirm.status_code == 200, confirm.text
+    pay = client.post(f"/api/v1/orders/{order_id}/pay", headers=headers)
+    assert pay.json()["payment_status"] == "deposit_paid"
+
+    refund = client.post(f"/api/v1/orders/{order_id}/refund", headers=admin)
+    assert refund.status_code == 200, refund.text
+    body = refund.json()
+    assert body["payment_status"] == "refunded"
+    assert body["status"] == "cancelled"
+
+    staff_id = client.get("/api/v1/admin/staff", headers=admin).json()[0]["id"]
+    assign = client.post(
+        f"/api/v1/orders/{order_id}/assign", headers=admin, json={"staff_id": staff_id}
+    )
+    assert assign.status_code == 409, assign.text
+
+    # 历史数据兼容：绕过取消直接置成「已确认 + 已退款」时，派单/确认也必须被拒
+    from app.db.models import Order
+    from app.db.session import SessionLocal
+
+    with SessionLocal() as db:
+        row = db.get(Order, order_id)
+        row.status = "confirmed"
+        row.payment_status = "refunded"
+        db.commit()
+
+    assign = client.post(
+        f"/api/v1/orders/{order_id}/assign", headers=admin, json={"staff_id": staff_id}
+    )
+    assert assign.status_code == 409, assign.text
+    assert "已退款" in assign.json()["detail"]
+    dispatch = client.post(
+        f"/api/v1/admin/orders/{order_id}/confirm-and-assign",
+        headers=admin,
+        json={"staff_id": staff_id},
+    )
+    assert dispatch.status_code == 409, dispatch.text
+    assert "已退款" in dispatch.json()["detail"]
+
+
 def test_outstanding_balance_blocks_new_order(client: TestClient) -> None:
     customer = _token(client, "13800000001")
     admin = _admin_token(client)

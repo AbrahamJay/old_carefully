@@ -72,13 +72,53 @@ class Settings(BaseSettings):
     online_payment_provider: Literal["mock", "wechat"] = "mock"
     notification_provider: Literal["db"] = "db"
 
-    # --- Agent（预留，暂未启用）---
+    # --- 派单 ---
+    # 关闭后候选接口直接返回 503，前端回退到手工员工列表
+    candidate_ranking_enabled: bool = True
+
+    # --- 异常巡检 ---
+    # 关闭后 worker 跳过扫描、异常巡检接口返回 503、前端隐藏入口
+    anomaly_scan_enabled: bool = True
+    anomaly_scan_interval_minutes: int = 10
+    anomaly_pending_confirm_minutes: int = 120
+    anomaly_confirmed_unassigned_minutes: int = 60
+    anomaly_assigned_not_accepted_minutes: int = 30
+    anomaly_in_service_overrun_minutes: int = 60
+    anomaly_balance_due_hours: int = 24
+
+    # --- Agent（LLM 能力）---
+    # 关闭后 /agent/* 全部返回 503，前端隐藏 AI 入口；主业务流程不受影响。
     agent_enabled: bool = False
-    llm_provider: str = "openai_compatible"
+    # mock 只用于本地/测试，生产启动校验会直接拒绝，避免误把假数据当真实能力上线。
+    llm_provider: Literal["mock", "openai_compatible"] = "mock"
     llm_base_url: str = ""
     llm_api_key: str = ""
     llm_model: str = ""
-    llm_timeout_seconds: float = 60.0
+    llm_timeout_seconds: float = 30.0
+    # 记录草稿的输出上限；服务前提示更短，单独一个上限避免为几句话付长文本的钱。
+    llm_max_tokens: int = 800
+    agent_prep_max_tokens: int = 300
+    # 关掉混合思考模型的推理过程：它会计入 max_tokens，长用例会被截断成非 JSON，
+    # 且延迟翻倍。DeepSeek/Qwen 等支持 thinking.type=disabled，其它网关请关掉本项。
+    llm_disable_thinking: bool = True
+    # 单人单日调用次数上限（按 agent_actions 落库计数），可按运营成本随时调整。
+    agent_daily_limit_per_user: int = 50
+    # 管理端解释场景单独一套额度：管理员排查时会连续点开多条，
+    # 与员工的写记录额度分开，避免互相挤占。
+    agent_admin_daily_limit_per_user: int = 100
+    # 两个解释场景的输出都很短，单独设上限，避免按记录草稿的额度付费。
+    agent_dispatch_max_tokens: int = 400
+    agent_task_max_tokens: int = 300
+    # 同一订单/任务在 TTL 内复用上次解释；订单状态变化会改变事实指纹，自动失效。
+    agent_cache_ttl_seconds: int = 600
+    # --- Agent 对话（阶段七「这单助手」）---
+    # 对话是多轮的，单独一套额度：否则一次排查就把员工当天的写记录额度吃掉。
+    agent_chat_daily_limit_per_user: int = 40
+    # 回答上限按 120 字反推；历史与单条发言都限长，避免把整段自由文本塞进 prompt。
+    agent_chat_max_tokens: int = 400
+    # 注意这里的单位是消息条数（一问一答算两条），不是轮数
+    agent_chat_history_turns: int = 6
+    agent_chat_message_max_chars: int = 200
 
     # --- 微信 ---
     wechat_appid: str = ""
@@ -126,6 +166,45 @@ class Settings(BaseSettings):
             ]
             if missing:
                 raise ValueError(f"STORAGE_PROVIDER=minio 时必须配置：{', '.join(missing)}")
+        if self.llm_timeout_seconds <= 0:
+            raise ValueError("llm_timeout_seconds 必须大于 0")
+        if self.llm_max_tokens <= 0 or self.agent_prep_max_tokens <= 0:
+            raise ValueError("llm_max_tokens / agent_prep_max_tokens 必须大于 0")
+        if self.agent_daily_limit_per_user <= 0:
+            raise ValueError("agent_daily_limit_per_user 必须大于 0")
+        if self.agent_admin_daily_limit_per_user <= 0:
+            raise ValueError("agent_admin_daily_limit_per_user 必须大于 0")
+        if self.agent_dispatch_max_tokens <= 0 or self.agent_task_max_tokens <= 0:
+            raise ValueError("agent_dispatch_max_tokens / agent_task_max_tokens 必须大于 0")
+        if self.agent_cache_ttl_seconds < 0:
+            raise ValueError("agent_cache_ttl_seconds 不能为负数")
+        if self.agent_chat_daily_limit_per_user <= 0:
+            raise ValueError("agent_chat_daily_limit_per_user 必须大于 0")
+        if (
+            self.agent_chat_max_tokens <= 0
+            or self.agent_chat_history_turns <= 0
+            or self.agent_chat_message_max_chars <= 0
+        ):
+            raise ValueError(
+                "agent_chat_max_tokens / agent_chat_history_turns / "
+                "agent_chat_message_max_chars 必须大于 0"
+            )
+        if self.agent_enabled and self.llm_provider == "openai_compatible":
+            missing = [
+                name
+                for name, value in (
+                    ("LLM_BASE_URL", self.llm_base_url),
+                    ("LLM_API_KEY", self.llm_api_key),
+                    ("LLM_MODEL", self.llm_model),
+                )
+                if not value
+            ]
+            if missing:
+                raise ValueError(
+                    f"AGENT_ENABLED=true 且 LLM_PROVIDER=openai_compatible 时必须配置：{', '.join(missing)}"
+                )
+            if not self.llm_base_url.startswith(("http://", "https://")):
+                raise ValueError("LLM_BASE_URL 必须以 http:// 或 https:// 开头")
         if self.is_prod:
             if self.allow_demo_login:
                 raise ValueError("生产环境必须关闭 ALLOW_DEMO_LOGIN")
@@ -133,6 +212,10 @@ class Settings(BaseSettings):
                 raise ValueError("生产环境必须关闭 AUTO_SEED")
             if self.jwt_secret == DEV_JWT_SECRET or len(self.jwt_secret) < 32:
                 raise ValueError("生产环境 JWT_SECRET 必须为不少于 32 字节的随机值")
+            if self.agent_enabled and self.llm_provider == "mock":
+                raise ValueError("生产环境不允许 LLM_PROVIDER=mock，必须接入真实模型网关")
+            if self.agent_enabled and not self.llm_base_url.startswith("https://"):
+                raise ValueError("生产环境 LLM_BASE_URL 必须使用 https")
         return self
 
 

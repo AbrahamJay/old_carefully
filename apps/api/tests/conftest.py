@@ -122,6 +122,11 @@ os.environ["UPLOAD_DIR"] = str(TEST_UPLOADS)
 # 测试固定用本地磁盘 + 后端转发，绝不连真实对象存储（.env 里可能配了 MinIO）
 os.environ["STORAGE_PROVIDER"] = "local"
 os.environ["FILE_DELIVERY"] = "proxy"
+# Agent 固定用 mock 模型：测试不产生真实调用与费用，也不依赖网络
+os.environ["AGENT_ENABLED"] = "true"
+os.environ["LLM_PROVIDER"] = "mock"
+os.environ["LLM_MODEL"] = "mock"
+os.environ["AGENT_DAILY_LIMIT_PER_USER"] = "50"
 
 if not os.environ.get("KEEP_TEST_DB"):
     atexit.register(_drop_database, TEST_DATABASE_URL)

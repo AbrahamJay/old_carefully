@@ -25,6 +25,7 @@ from ..infra.payment import MockOnlineGateway, WechatPayGateway
 from ..infra.ports import FileStorage, OnlinePaymentGateway
 from ..infra.storage import build_local_storage, build_storage
 from ..modules.admin import AdminService
+from ..modules.agents import AgentService
 from ..modules.audit import AuditService
 from ..modules.auth import AuthService
 from ..modules.catalog import CatalogService
@@ -36,6 +37,8 @@ from ..modules.orders import OrderService
 from ..modules.orders.repository import OrderRepository
 from ..modules.org import StaffService, StationService, SupplierService
 from ..modules.payments import PaymentService
+from ..modules.tasks import TaskService
+from ..modules.tasks.repository import TaskRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -160,6 +163,21 @@ def get_admin_service(
     audit: AuditService = Depends(get_audit_service),
 ) -> AdminService:
     return AdminService(db, OrderRepository(db), audit)
+
+
+def get_task_service(
+    db: Session = Depends(get_db),
+    audit: AuditService = Depends(get_audit_service),
+) -> TaskService:
+    return TaskService(db, TaskRepository(db), audit)
+
+
+def get_agent_service(
+    db: Session = Depends(get_db),
+    orders: OrderService = Depends(get_order_service),
+) -> AgentService:
+    """Agent 复用订单服务做权限与事实读取，不另建一套查询。"""
+    return AgentService(db, orders)
 
 
 def get_file_service(

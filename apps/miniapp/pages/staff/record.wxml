@@ -22,6 +22,17 @@
     </view>
   </view>
 
+  <!-- 服务前提示：来自 Agent 的只读建议，失败或关闭时整块不渲染 -->
+  <view class="card organic warm" wx:if="{{prepItems.length}}">
+    <view class="row between">
+      <view class="section-title">服务前提示</view>
+      <text class="eyebrow">AI</text>
+    </view>
+    <view class="ai-list">
+      <view class="ai-item" wx:for="{{prepItems}}" wx:key="*this">{{item}}</view>
+    </view>
+  </view>
+
   <view class="card organic warm" wx:if="{{isAssigned}}">
     <view class="section-title">下一步</view>
     <view class="small muted mt8">接单并开始服务后，才能提交服务记录。</view>
@@ -31,6 +42,12 @@
     <view class="section-title">服务记录</view>
     <view class="small muted mt8">记录服务内容或上传 1–3 张照片（至少一项），提交后完成订单。</view>
     <textarea class="textarea mt16" value="{{content}}" bindinput="onContent" placeholder="例如：陪同完成复查，医嘱已拍照发给家属；代取药 2 盒。" />
+    <!-- AI 润色：润色上面输入框里已经写的文字，不会再弹一个输入框 -->
+    <view class="ai-bar" wx:if="{{agentEnabled}}">
+      <view class="helper">AI 只润色文字，不改事实、不会自动提交</view>
+      <view class="ai-inline {{agentBusy || !content ? 'is-disabled' : ''}}" bindtap="polishContent">{{agentBusy ? '润色中' : 'AI 润色'}}</view>
+    </view>
+    <view class="ai-undo" wx:if="{{polishedFrom}}">已润色 · <text class="ai-undo-link" bindtap="undoPolish">撤销</text></view>
     <view class="photo-grid mt16">
       <view class="photo-item" wx:for="{{photos}}" wx:key="path">
         <image class="photo" src="{{item.url}}" mode="aspectFill" data-url="{{item.url}}" bindtap="previewImage" />

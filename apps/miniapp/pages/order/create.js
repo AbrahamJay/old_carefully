@@ -169,7 +169,17 @@ Page({
           notes: this.data.notes
         }
       })
-      wx.showToast({ title: '预约成功', icon: 'success' })
+      // 预约即付定金：创建成功后立即发起支付；支付失败不阻断下单，可到详情页重试
+      let toast = { title: '预约成功', icon: 'success' }
+      if (Number(order.deposit_cents || 0) > 0) {
+        try {
+          await request('/orders/' + order.id + '/pay', { method: 'POST' })
+          toast = { title: '预约并支付成功', icon: 'success' }
+        } catch (e) {
+          toast = { title: '定金待支付', icon: 'none' }
+        }
+      }
+      wx.showToast(toast)
       setTimeout(() => wx.redirectTo({ url: '/pages/order/detail?id=' + order.id }), 360)
     } finally {
       this.setData({ loading: false })

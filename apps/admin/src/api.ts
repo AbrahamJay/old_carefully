@@ -59,3 +59,76 @@ export function logout() {
   clearLogin()
   location.href = '/login'
 }
+
+// ------------------------------------------------------------ Agent 管理端
+export type AgentSource = 'llm' | 'cache' | 'rule'
+
+export interface AgentStatus {
+  enabled: boolean
+  provider: string
+  model: string
+  daily_limit: number
+  used_today: number
+  remaining: number
+  prep_brief_enabled: boolean
+  admin_scenarios: string[]
+  admin_daily_limit: number
+  admin_remaining: number
+}
+
+export interface DispatchSuggest {
+  order_id: number
+  recommendation: { staff_id: number; name: string; score: number } | null
+  summary: string
+  why: string[]
+  risks: string[]
+  data_gaps: string[]
+  alternatives: { staff_id: number; name: string; note: string }[]
+  excluded: { name: string; reasons: string[] }[]
+  source: AgentSource
+  warnings: string[]
+  trace_id: string
+  model: string
+  latency_ms: number
+  facts_hash: string
+  generated_at: string
+}
+
+export interface TaskExplain {
+  task_id: number
+  type: string
+  title: string
+  what_happened: string
+  why: string
+  next_actions: { action: string; label: string }[]
+  escalate: boolean
+  data_gaps: string[]
+  source: AgentSource
+  warnings: string[]
+  trace_id: string
+  model: string
+  latency_ms: number
+  facts_hash: string
+  generated_at: string
+}
+
+/** 当前账号能否用 AI、今天还剩多少次；管理端场景单独下发 */
+export function agentStatus(): Promise<AgentStatus> {
+  return request('/agent/status')
+}
+
+/** 派单说明：人仍由规则选定，这里只取解释文案 */
+export function dispatchSuggest(orderId: number, forceRefresh = false): Promise<DispatchSuggest> {
+  return request('/agent/admin/dispatch-suggest', {
+    method: 'POST',
+    body: { order_id: orderId, force_refresh: forceRefresh },
+  })
+}
+
+/** 异常解释：动作取自后端白名单，前端只负责展示 */
+export function taskExplain(taskId: number, forceRefresh = false): Promise<TaskExplain> {
+  return request('/agent/admin/task-explain', {
+    method: 'POST',
+    body: { task_id: taskId, force_refresh: forceRefresh },
+  })
+}

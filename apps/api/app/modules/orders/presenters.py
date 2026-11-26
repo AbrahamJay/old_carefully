@@ -11,7 +11,17 @@ from ..auth.schemas import UserOut
 from ..catalog.schemas import ServiceOut
 from ..elders.schemas import ElderOut
 from ..payments import PaymentTotals
-from .schemas import OrderDetailOut, OrderListItem, RecordOut, ReviewOut
+from .candidates import CandidateReport
+from .schemas import (
+    CandidateOut,
+    CandidateRecommendationOut,
+    CandidatesOut,
+    ExcludedCandidateOut,
+    OrderDetailOut,
+    OrderListItem,
+    RecordOut,
+    ReviewOut,
+)
 
 
 def _display_assignment(order: Order) -> OrderAssignment | None:
@@ -31,6 +41,25 @@ def _service_confirmed(order: Order) -> bool:
 
 def to_record(record: ServiceRecord) -> RecordOut:
     return RecordOut.model_validate(record)
+
+
+def to_candidates(report: CandidateReport) -> CandidatesOut:
+    """候选结果转 DTO；推荐人固定取排序后的第一位。"""
+    recommendation = None
+    if report.candidates:
+        top = report.candidates[0]
+        recommendation = CandidateRecommendationOut(
+            staff_id=top.staff_id, name=top.name, score=top.score
+        )
+    return CandidatesOut(
+        order_id=report.order_id,
+        generated_at=report.generated_at,
+        required_skill=report.required_skill,
+        candidates=[CandidateOut.model_validate(item) for item in report.candidates],
+        excluded=[ExcludedCandidateOut.model_validate(item) for item in report.excluded],
+        data_gaps=list(report.data_gaps),
+        recommendation=recommendation,
+    )
 
 
 def to_list_item(order: Order, totals: PaymentTotals) -> OrderListItem:

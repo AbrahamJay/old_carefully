@@ -37,6 +37,7 @@ def _json_type() -> JSONB:
 
 __all__ = [
     "AdminTask",
+    "AgentAction",
     "AuditLog",
     "Consent",
     "Elder",
@@ -418,3 +419,38 @@ class AdminTask(Base):
     )
 
     order: Mapped[Order] = relationship()
+
+
+class AgentAction(Base):
+    """Agent 调用审计：每次模型/工具/动作调用一行。
+
+    与 ``audit_logs`` 分工不同：后者记「人对业务数据的修改」，本表记「AI 参与了什么」，
+    两者不双写。``payload`` 只存白名单字段（订单号、模型、耗时等），用户输入与老人
+    健康信息一律只留摘要，保证排障可用、原文不落库。
+    """
+
+    __tablename__ = "agent_actions"
+    # trace_id 串起一次请求内的多个步骤；thread_id 留给阶段七的对话会话，当前恒为空。
+    __table_args__ = (
+        Index("ix_agent_actions_trace", "trace_id", "step"),
+        Index("ix_agent_actions_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    trace_id: Mapped[str] = mapped_column(String(32), index=True)
+    thread_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    scenario: Mapped[str] = mapped_column(String(40))
+    step: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="ok")
+    model: Mapped[str] = mapped_column(String(60), default="")
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    tokens_in: Mapped[int] = mapped_column(Integer, default=0)
+    tokens_out: Mapped[int] = mapped_column(Integer, default=0)
+    error_code: Mapped[str] = mapped_column(String(40), default="")
+    payload: Mapped[dict] = mapped_column(_json_type(), default=dict)
+    # 对输入做 SHA-256，既能比对同一输入是否重复调用，又不保存原文
+    payload_digest: Mapped[str] = mapped_column(String(64), default="")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )

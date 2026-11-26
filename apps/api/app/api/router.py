@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from ..modules.admin.router import router as admin_router
+from ..modules.agents.router import router as agents_router
 from ..modules.auth.router import router as auth_router
 from ..modules.catalog.router import router as catalog_router
 from ..modules.elders.router import router as elders_router
@@ -29,6 +30,7 @@ for module_router in (
     org_router,
     admin_router,
     tasks_router,
+    agents_router,
 ):
     api_router.include_router(module_router)
 

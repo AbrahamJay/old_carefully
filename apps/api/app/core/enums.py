@@ -111,3 +111,23 @@ class TaskStatus(StrEnum):
     HANDLED = "handled"
     IGNORED = "ignored"
     RESOLVED = "resolved"
+
+
+class AgentScenario(StrEnum):
+    """Agent 场景标识，同时写入 ``agent_actions.scenario``。"""
+
+    RECORD_DRAFT = "record_draft"
+    PREP_BRIEF = "prep_brief"
+    # 管理端两个场景：规则算事实，模型只负责解释，不参与决策
+    DISPATCH_SUGGEST = "dispatch_suggest"
+    TASK_EXPLAIN = "task_explain"
+    # 员工「这单助手」：绑定单张订单的窄问答，不是通用助手
+    CHAT = "chat"
+
+
+class AgentActionStatus(StrEnum):
+    """单次 Agent 调用的结果：失败也要落库，否则无法统计可用率。"""
+
+    OK = "ok"
+    FAILED = "failed"
+    BLOCKED = "blocked"

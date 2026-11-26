@@ -92,7 +92,7 @@ def _only_reason(overrides: dict) -> str:
         ),
         ({"on_leave": True}, "当日请假"),
         ({"daily_capacity": 0}, "未设置每日容量"),
-        ({"load": 4}, "当日已满（4/4）"),
+        ({"load": 4}, "12-01 已满（4/4）"),
     ],
 )
 def test_hard_filters(overrides: dict, expected: str) -> None:
@@ -158,7 +158,7 @@ def test_risks_for_high_load_low_rating_and_missing_profile() -> None:
     assert candidate.risks == (
         "非同社区，需跨小区出行",
         "历史评分偏低（4.2）",
-        "当日接近满负荷",
+        "12-01 接近满负荷",
         "未维护排班档案，按默认 08:00-18:00 计算",
     )
 

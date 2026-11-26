@@ -145,8 +145,11 @@ class TaskService:
 
         started = time.perf_counter()
         now = utcnow()
+        # 用事务级 advisory lock：随 commit/rollback 自动释放。
+        # 若用会话级 pg_try_advisory_lock，commit 会先把连接还回池，后续 unlock
+        # 可能落在另一条连接上，导致锁泄漏、后续扫描全部被判为「已有人扫描」。
         locked = self._db.scalar(
-            text("SELECT pg_try_advisory_lock(:key)"), {"key": ANOMALY_LOCK_KEY}
+            text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": ANOMALY_LOCK_KEY}
         )
         if not locked:
             return ScanResultOut(scanned=False, skip_reason="另一个扫描正在进行中")
@@ -196,14 +199,6 @@ class TaskService:
         except Exception:
             self._db.rollback()
             raise
-        finally:
-            try:
-                self._db.execute(
-                    text("SELECT pg_advisory_unlock(:key)"), {"key": ANOMALY_LOCK_KEY}
-                )
-                self._db.commit()
-            except Exception:
-                logger.exception("释放异常扫描锁失败")
 
         duration = int((time.perf_counter() - started) * 1000)
         logger.info(

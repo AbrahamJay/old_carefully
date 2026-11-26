@@ -1,11 +1,31 @@
-"""Agent 接入占位目录（后续需求，当前不实现）。
+"""Agent 模块：LLM 辅助能力（记录代写、服务前提示）。
 
-规划中的结构：
-- ``tools.py``：把 service 层能力包装成 LLM 可调用的工具，
-  与 HTTP 路由共用同一套业务规则，不重复实现。
-- ``runtime.py``：会话状态、上下文拼装与 LLM 调用。
-- ``router.py``：``/agent/*`` 接口，由 ``settings.agent_enabled`` 控制上下线。
+统一底座（阶段五起生效，阶段七复用）：
+- ``models.py``：自写 ``BaseChatModel`` 适配 OpenAI 兼容网关，httpx 只出现在这里；
+- ``runtime.py``：LangGraph 图编排的唯一入口，单轮场景也是图；
+- ``tools.py``：只读事实层，阶段七绑定给模型时复用同一份定义；
+- ``policies.py``：脱敏、急症红线、结构校验与医疗措辞后置检查；
+- ``audit.py``：每次模型调用写入 ``agent_actions``，失败也留痕；
+- ``service.py`` / ``router.py``：开关、配额与 ``/agent/*`` 端点。
 
-保持空实现是刻意为之：Agent 依赖的 service 层已经就位，
-后续只需在此目录新增文件，无需改动业务模块。
+图只产出文本，任何写操作仍走原有业务接口，AI 不可用时主流程不受影响。
 """
+
+from __future__ import annotations
+
+import warnings
+
+from langchain_core._api.deprecation import LangChainPendingDeprecationWarning
+
+# 第三方 langgraph 在导入期会抛一条与业务无关的 pending deprecation 警告，
+# 每次启动/跑测试都会刷屏，这里只屏蔽这一条，不影响其它告警。
+# 必须在导入 langchain_core 之后再注册：它会在自己导入时把该类别恢复为 default。
+warnings.filterwarnings(
+    "ignore",
+    message=r"The default value of `allowed_objects` will change.*",
+    category=LangChainPendingDeprecationWarning,
+)
+
+from .service import AgentService
+
+__all__ = ["AgentService"]

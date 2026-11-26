@@ -99,7 +99,12 @@
               </div>
               <div class="page-sub">{{ requiredSkill ? '本单需要技能：' + requiredSkill : '该服务未配置所需技能' }}</div>
             </div>
-            <el-tag v-if="recommendation" type="success" round>{{ recommendation.score }} 分</el-tag>
+            <div class="suggestion-actions">
+              <el-tag v-if="recommendation" type="success" round>{{ recommendation.score }} 分</el-tag>
+              <el-button v-if="aiOn && candidates.length" size="small" type="primary" plain @click="openAi">
+                AI 说明
+              </el-button>
+            </div>
           </div>
 
           <el-alert
@@ -125,7 +130,7 @@
                 <span class="candidate-score">{{ item.score }} 分</span>
               </div>
               <div class="candidate-meta">
-                {{ item.station_name || '未分配站点' }} · 负载 {{ item.load }}/{{ item.capacity }} · 评分 {{ item.rating.toFixed(1) }}
+                {{ item.station_name || '未分配站点' }} · {{ serviceDayText }} 负载 {{ item.load }}/{{ item.capacity }} · 评分 {{ item.rating.toFixed(1) }}
               </div>
               <div class="candidate-skills">{{ (item.skills || []).join('、') || '未维护技能' }}</div>
               <ul class="reasons">
@@ -183,6 +188,53 @@
         <el-button type="primary" :loading="executing" @click="execute">确认执行</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="aiVisible" title="AI 派单说明" size="420px">
+      <div v-loading="aiLoading" class="ai-body">
+        <template v-if="aiData">
+          <div class="ai-source">
+            <el-tag :type="aiSourceType" size="small" round>{{ aiSourceText }}</el-tag>
+            <span class="ai-meta">{{ aiData.model || '规则引擎' }} · {{ aiData.latency_ms }}ms</span>
+          </div>
+          <el-alert
+            v-if="aiData.source === 'rule'"
+            type="info"
+            :closable="false"
+            show-icon
+            title="本次没有新的模型解释"
+            description="AI 暂不可用或输出未通过校验，以下内容直接来自候选引擎，不影响派单。"
+          />
+          <div class="ai-summary">{{ aiData.summary || '暂无说明' }}</div>
+          <div v-if="aiData.why.length" class="ai-block">
+            <div class="ai-block-title">为什么推荐</div>
+            <ul class="ai-list">
+              <li v-for="item in aiData.why" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+          <div v-if="aiData.risks.length" class="ai-block">
+            <div class="ai-block-title">需要注意</div>
+            <ul class="ai-list warn">
+              <li v-for="item in aiData.risks" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+          <div v-if="aiData.alternatives.length" class="ai-block">
+            <div class="ai-block-title">备选</div>
+            <div v-for="item in aiData.alternatives" :key="item.staff_id" class="ai-alt">
+              <strong>{{ item.name }}</strong><span v-if="item.note"> · {{ item.note }}</span>
+            </div>
+          </div>
+          <div v-if="aiData.data_gaps.length" class="ai-block">
+            <div class="ai-block-title">数据缺口</div>
+            <ul class="ai-list">
+              <li v-for="item in aiData.data_gaps" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+          <div class="ai-note">AI 只负责解释规则结果，不会改变推荐人选；派单仍由你确认。</div>
+          <el-button size="small" :loading="aiLoading" @click="loadAi(true)">重新生成</el-button>
+        </template>
+        <el-empty v-else description="点击「AI 说明」生成" :image-size="72" />
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -190,7 +242,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { request } from '../api'
+import { request, agentStatus, dispatchSuggest } from '../api'
+import type { DispatchSuggest } from '../api'
 
 const STATUS: Record<string, string> = {
   pending_confirm: '待确认', confirmed: '待派单', assigned: '已派单', in_service: '服务中', completed: '已完成', cancelled: '已取消'
@@ -212,6 +265,11 @@ const selectedStaffId = ref<number | null>(null)
 const candidateLoading = ref(false)
 const confirmVisible = ref(false)
 const executing = ref(false)
+// AI 说明：只在开关打开且当前账号拿到管理端场景时渲染入口
+const aiOn = ref(false)
+const aiVisible = ref(false)
+const aiLoading = ref(false)
+const aiData = ref<DispatchSuggest | null>(null)
 
 const orderId = computed(() => (route.query.order ? String(route.query.order) : ''))
 const visibleQueue = computed(() => queue.value.filter((item) => !skipped.value.has(item.id)))
@@ -221,6 +279,18 @@ const selectedCandidate = computed(
 const canDispatch = computed(
   () => !!current.value && !isRefunded.value && ['pending_confirm', 'confirmed'].includes(current.value.status) && !!selectedStaffId.value
 )
+const aiSourceText = computed(() => {
+  const source = aiData.value?.source
+  if (source === 'llm') return '模型解释'
+  if (source === 'cache') return '缓存结果'
+  return '规则文案'
+})
+const aiSourceType = computed(() => {
+  const source = aiData.value?.source
+  if (source === 'llm') return 'success'
+  if (source === 'cache') return 'info'
+  return 'warning'
+})
 // 已退款订单不进待派单队列（历史数据可能还停在已确认）
 const isRefunded = computed(() => current.value?.payment_status === 'refunded')
 const confirmRisks = computed(() => {
@@ -232,6 +302,11 @@ const confirmRisks = computed(() => {
 
 function statusText(value: string) { return STATUS[value] || value }
 function formatTime(value: string) { return value ? value.replace('T', ' ').slice(0, 16) : '—' }
+// 负载是按「本单服务日」统计的，卡片上带个 MM-DD，避免被读成员工手上的总单数
+const serviceDayText = computed(() => {
+  const at = current.value?.scheduled_at
+  return at ? String(at).slice(5, 10) : '当日'
+})
 function waitedText(value: string) {
   if (!value) return '—'
   const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000))
@@ -241,6 +316,33 @@ function waitedText(value: string) {
 
 function notifyLayout() {
   window.dispatchEvent(new Event('dispatch:refresh'))
+}
+
+async function loadAgentStatus() {
+  try {
+    const status = await agentStatus()
+    aiOn.value = status.enabled && (status.admin_scenarios || []).includes('dispatch_suggest')
+  } catch {
+    // 状态拿不到就不显示入口，不影响派单主流程
+    aiOn.value = false
+  }
+}
+
+function openAi() {
+  aiVisible.value = true
+  if (!aiData.value) loadAi()
+}
+
+async function loadAi(force = false) {
+  if (!current.value || aiLoading.value) return
+  aiLoading.value = true
+  try {
+    aiData.value = await dispatchSuggest(current.value.id, force)
+  } catch (error: any) {
+    ElMessage.error(error.message)
+  } finally {
+    aiLoading.value = false
+  }
 }
 
 async function loadSummary() {
@@ -263,6 +365,8 @@ async function loadQueue() {
 
 async function loadDetail(id: number) {
   candidateLoading.value = true
+  // 换单后旧的 AI 说明不再适用，避免把上一单的解释读成这一单的
+  aiData.value = null
   try {
     const [detail, report] = await Promise.all([
       request('/orders/' + id),
@@ -399,6 +503,7 @@ watch(
 
 onMounted(async () => {
   await refreshAll()
+  loadAgentStatus()
   if (!orderId.value && visibleQueue.value.length) {
     selectOrder(visibleQueue.value[0].id)
   }
@@ -464,6 +569,7 @@ onMounted(async () => {
   margin-bottom: 14px;
 }
 .suggestion-title { font-size: 16px; font-weight: 700; color: #1A2420; }
+.suggestion-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .candidate-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -507,6 +613,20 @@ onMounted(async () => {
   line-height: 1.9;
 }
 .confirm-risk-title { font-weight: 700; margin-bottom: 2px; }
+
+.ai-body { min-height: 160px; display: flex; flex-direction: column; gap: 14px; }
+.ai-source { display: flex; align-items: center; gap: 8px; }
+.ai-meta { font-size: 12px; color: #8C9690; }
+.ai-summary { font-size: 14px; line-height: 1.8; color: #1A2420; }
+.ai-block { border-top: 1px solid #E7E4DC; padding-top: 12px; }
+.ai-block-title { font-size: 12px; font-weight: 700; color: #8C9690; margin-bottom: 6px; }
+.ai-list { margin: 0; padding: 0; list-style: none; }
+.ai-list li { font-size: 13px; line-height: 1.9; color: #54615B; }
+.ai-list li::before { content: '· '; color: #1F6345; }
+.ai-list.warn li { color: #C25E0A; }
+.ai-list.warn li::before { color: #C25E0A; }
+.ai-alt { font-size: 13px; line-height: 1.9; color: #54615B; }
+.ai-note { font-size: 12px; color: #8C9690; line-height: 1.7; }
 
 @media (max-width: 1180px) {
   .workbench { grid-template-columns: 280px minmax(0, 1fr); }

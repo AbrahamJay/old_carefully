@@ -134,7 +134,19 @@
         </div>
 
         <div class="page-card">
-          <div class="block-title">规则解释</div>
+          <div class="block-head">
+            <div class="block-title">规则解释</div>
+            <el-button
+              v-if="aiOn && isActive"
+              size="small"
+              type="primary"
+              plain
+              :loading="aiLoading"
+              @click="loadAi(false)"
+            >
+              AI 解释
+            </el-button>
+          </div>
           <div class="explain-row">
             <span class="explain-label">为什么被标记</span>
             <p>{{ facts.why || '—' }}</p>
@@ -150,7 +162,57 @@
           <div class="rule-meta">
             阈值 {{ thresholdText }} · 已等待 {{ facts.elapsed_minutes ?? 0 }} 分钟
           </div>
-          <div class="explain-note">以上解释由扫描规则直接生成，未调用大模型；最终判断仍由你确认。</div>
+          <div class="explain-note">
+            以上解释由扫描规则直接生成；AI 解释只换一种说法，不改变事实与判定。
+          </div>
+
+          <div v-if="aiData" class="ai-block">
+            <div class="ai-head">
+              <el-tag :type="aiSourceType" size="small" round>{{ aiSourceText }}</el-tag>
+              <span class="muted">{{ aiData.model || '规则引擎' }} · {{ aiData.latency_ms }}ms</span>
+              <el-button size="small" text :loading="aiLoading" @click="loadAi(true)">重新生成</el-button>
+            </div>
+            <el-alert
+              v-if="aiData.source === 'rule'"
+              type="info"
+              :closable="false"
+              show-icon
+              title="本次为规则文案"
+              description="AI 暂不可用或输出未通过校验，以下内容直接取自扫描规则。"
+            />
+            <el-alert
+              v-if="aiData.escalate"
+              type="warning"
+              :closable="false"
+              show-icon
+              title="建议升级处理"
+              description="已多次超时或影响较大，请尽快联系相关方并在处理后填写说明。"
+            />
+            <div class="ai-summary">{{ aiData.what_happened || '—' }}</div>
+            <div class="ai-line">
+              <span class="explain-label">原因</span>
+              <p>{{ aiData.why || '—' }}</p>
+            </div>
+            <div class="ai-actions">
+              <span class="explain-label">建议动作</span>
+              <div class="ai-tags">
+                <el-tag
+                  v-for="item in aiData.next_actions"
+                  :key="item.action"
+                  type="success"
+                  effect="plain"
+                  size="small"
+                >
+                  {{ item.label }}
+                </el-tag>
+              </div>
+            </div>
+            <div v-if="aiData.data_gaps.length" class="ai-line">
+              <span class="explain-label">补充信息</span>
+              <p>{{ aiData.data_gaps.join('；') }}</p>
+            </div>
+            <div class="explain-note">AI 只整理已有事实，不会自动处理；处理动作仍需点击上方按钮并留痕。</div>
+          </div>
         </div>
       </section>
 
@@ -180,7 +242,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { request } from '../api'
+import { request, agentStatus, taskExplain } from '../api'
+import type { TaskExplain } from '../api'
 
 const TYPES = [
   { value: 'pending_timeout', label: '待确认超时' },
@@ -218,6 +281,10 @@ const scanning = ref(false)
 const snoozeVisible = ref(false)
 const snoozeHours = ref(2)
 const snoozeNote = ref('')
+// AI 解释：后端已做脱敏与白名单，前端只负责条件展示
+const aiOn = ref(false)
+const aiLoading = ref(false)
+const aiData = ref<TaskExplain | null>(null)
 
 const taskId = computed(() => (route.query.task ? String(route.query.task) : ''))
 const facts = computed(() => current.value?.detail || {})
@@ -225,6 +292,18 @@ const isActive = computed(
   () => !!current.value && ['open', 'snoozed'].includes(current.value.status)
 )
 const lastScanText = computed(() => formatTime(summary.value.last_scan_at) || '—')
+const aiSourceText = computed(() => {
+  const source = aiData.value?.source
+  if (source === 'llm') return 'AI 解释'
+  if (source === 'cache') return '缓存结果'
+  return '规则文案'
+})
+const aiSourceType = computed(() => {
+  const source = aiData.value?.source
+  if (source === 'llm') return 'success'
+  if (source === 'cache') return 'info'
+  return 'warning'
+})
 const thresholdText = computed(() => {
   const minutes = Number(facts.value.threshold_minutes || 0)
   if (!minutes) return '立即命中'
@@ -257,6 +336,28 @@ function notifyLayout() {
   window.dispatchEvent(new Event('anomaly:refresh'))
 }
 
+async function loadAgentStatus() {
+  try {
+    const status = await agentStatus()
+    aiOn.value = status.enabled && (status.admin_scenarios || []).includes('task_explain')
+  } catch {
+    // 状态拿不到就不显示入口，不影响异常处理主流程
+    aiOn.value = false
+  }
+}
+
+async function loadAi(force = false) {
+  if (!current.value || aiLoading.value) return
+  aiLoading.value = true
+  try {
+    aiData.value = await taskExplain(current.value.id, force)
+  } catch (error: any) {
+    ElMessage.error(error.message)
+  } finally {
+    aiLoading.value = false
+  }
+}
+
 async function loadSummary() {
   try {
     summary.value = await request('/admin/tasks/summary')
@@ -275,6 +376,8 @@ async function loadList() {
 }
 
 async function loadDetail(id: number) {
+  // 换任务后旧的解释不再适用
+  aiData.value = null
   const inList = list.value.find((item) => item.id === id)
   if (inList) {
     current.value = inList
@@ -420,7 +523,10 @@ watch(
   { immediate: true }
 )
 
-onMounted(refreshAll)
+onMounted(async () => {
+  await refreshAll()
+  loadAgentStatus()
+})
 </script>
 
 <style scoped>
@@ -488,6 +594,8 @@ onMounted(refreshAll)
 .empty-detail { min-height: 320px; display: flex; align-items: center; justify-content: center; }
 
 .block-title { font-size: 16px; font-weight: 700; color: #1A2420; margin-bottom: 14px; }
+.block-head { display: flex; align-items: center; justify-content: space-between; }
+.block-head .block-title { margin-bottom: 14px; }
 .explain-row { display: flex; gap: 12px; margin-bottom: 14px; }
 .explain-label { flex-shrink: 0; width: 84px; font-size: 12px; color: #8C9690; padding-top: 2px; }
 .explain-row p { margin: 0; font-size: 14px; line-height: 1.7; color: #1A2420; }
@@ -503,6 +611,20 @@ onMounted(refreshAll)
 }
 .rule-meta { margin: 10px 0 0 96px; font-size: 12px; color: #8C9690; }
 .explain-note { margin-top: 14px; font-size: 12px; color: #8C9690; }
+.ai-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #E7E4DC;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ai-head { display: flex; align-items: center; gap: 8px; }
+.ai-summary { font-size: 14px; line-height: 1.8; color: #1A2420; }
+.ai-line { display: flex; gap: 12px; }
+.ai-line p { margin: 0; font-size: 13px; line-height: 1.7; color: #54615B; }
+.ai-actions { display: flex; gap: 12px; align-items: flex-start; }
+.ai-tags { display: flex; gap: 8px; flex-wrap: wrap; }
 .snooze-note { margin-top: 14px; }
 
 @media (max-width: 1180px) {

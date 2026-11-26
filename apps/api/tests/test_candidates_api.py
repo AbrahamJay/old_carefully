@@ -303,7 +303,7 @@ def test_candidates_exclude_conflict_leave_and_full_day(
         )
         body = _candidates(client, admin, full_day["id"])
         excluded = {item["staff_id"]: item["reasons"][0] for item in body["excluded"]}
-        assert excluded[env.staff_b] == "当日已满（1/1）"
+        assert excluded[env.staff_b] == f"{_workday(7, 14).strftime('%m-%d')} 已满（1/1）"
         # 另一名员工 14:00 与 09:00-13:00 首尾相接，仍可候选
         assert env.staff_a in {item["staff_id"] for item in body["candidates"]}
     finally:

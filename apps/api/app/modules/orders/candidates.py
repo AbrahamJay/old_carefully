@@ -171,7 +171,7 @@ def _exclusion(ctx: OrderContext, staff: StaffSnapshot) -> str | None:
     if staff.daily_capacity <= 0:
         return "未设置每日容量"
     if staff.load >= staff.daily_capacity:
-        return f"当日已满（{staff.load}/{staff.daily_capacity}）"
+        return f"{ctx.business_date:%m-%d} 已满（{staff.load}/{staff.daily_capacity}）"
     return None
 
 
@@ -187,11 +187,13 @@ def _build_candidate(ctx: OrderContext, staff: StaffSnapshot) -> Candidate:
     )
     score = max(0, min(100, score))
 
+    # 负载是「本单服务日」当天的单量，不是员工手上总单数：必须带日期，
+    # 否则看到「负载 0/4」会误以为系统没算她未来几天的单
     reasons = [
         "同社区" if same_community else "同站点，非同社区",
         f"技能匹配：{ctx.required_skill}" if ctx.required_skill else "服务未配置所需技能",
         f"可用：{_fmt_slot(ctx.start, ctx.end, ctx.tz)}",
-        f"负载 {staff.load}/{staff.daily_capacity}",
+        f"{ctx.business_date:%m-%d} 负载 {staff.load}/{staff.daily_capacity}",
         f"评分 {staff.rating:.1f}",
     ]
 
@@ -201,7 +203,7 @@ def _build_candidate(ctx: OrderContext, staff: StaffSnapshot) -> Candidate:
     if staff.rating < 4.5:
         risks.append(f"历史评分偏低（{staff.rating:.1f}）")
     if staff.daily_capacity > 0 and staff.load >= staff.daily_capacity - 1:
-        risks.append("当日接近满负荷")
+        risks.append(f"{ctx.business_date:%m-%d} 接近满负荷")
     if not staff.profile_present:
         risks.append("未维护排班档案，按默认 08:00-18:00 计算")
 
